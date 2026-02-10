@@ -183,7 +183,7 @@ serve(async (req) => {
       }
 
       if (!teamId) {
-        return json({ error: "No team assigned" }, 400);
+        return json({ hasTeam: false, members: [], message: "No team assigned. Ask admin to assign you to a team." });
       }
 
       // Get team members
