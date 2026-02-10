@@ -9,6 +9,7 @@ import {
   LogOut,
   LogIn,
   UsersRound,
+  Activity,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +39,7 @@ const adminItems = [
   { title: "Overview", url: "/admin", icon: Settings },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Teams", url: "/admin/teams", icon: UsersRound },
+  { title: "Events", url: "/admin/events", icon: Activity },
 ];
 
 export function AppSidebar() {

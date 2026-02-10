@@ -295,6 +295,31 @@ serve(async (req) => {
       }
     }
 
+    // ── Events ──
+    if (resource === "events" && req.method === "GET") {
+      const { data: events, error } = await supabase
+        .from("events")
+        .select("id, timestamp, type, device_id, metadata, user_id, processed")
+        .order("timestamp", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+
+      const userIds = [...new Set((events || []).map((e: { user_id: string }) => e.user_id))];
+      const { data: users } = userIds.length > 0
+        ? await supabase.from("users").select("id, email").in("id", userIds)
+        : { data: [] };
+
+      const emailMap: Record<string, string> = {};
+      (users || []).forEach((u: { id: string; email: string }) => { emailMap[u.id] = u.email; });
+
+      const enriched = (events || []).map((e: Record<string, unknown>) => ({
+        ...e,
+        user_email: emailMap[e.user_id as string] || "unknown",
+      }));
+
+      return json({ events: enriched });
+    }
+
     return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error("Admin error:", err);
