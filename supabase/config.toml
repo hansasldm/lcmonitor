@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.work-sessions]
 verify_jwt = false
+
+[functions.agent]
+verify_jwt = false
