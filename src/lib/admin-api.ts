@@ -35,4 +35,9 @@ export const adminApi = {
     request("teams", { method: "POST", body: JSON.stringify(body) }),
   updateTeam: (id: string, body: Record<string, unknown>) =>
     request(`teams/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  getTeamMembers: (teamId: string) => request(`teams/${teamId}/members`),
+  addTeamMembers: (teamId: string, userIds: string[]) =>
+    request(`teams/${teamId}/members`, { method: "POST", body: JSON.stringify({ user_ids: userIds }) }),
+  removeTeamMember: (teamId: string, userId: string) =>
+    request(`teams/${teamId}/members`, { method: "DELETE", body: JSON.stringify({ user_id: userId }) }),
 };

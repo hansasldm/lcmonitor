@@ -22,11 +22,7 @@ async function verifyJWT(
     const encoder = new TextEncoder();
     const data = `${header}.${payload}`;
     const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"]
+      "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
     );
     const sig = signature.replace(/-/g, "+").replace(/_/g, "/");
     const sigPadded = sig + "=".repeat((4 - (sig.length % 4)) % 4);
@@ -72,13 +68,13 @@ serve(async (req) => {
   const jwtSecret = Deno.env.get("JWT_SECRET")!;
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
-  // Path format: /admin/<resource>[/<id>]
-  const resource = pathParts[pathParts.length - 2] === "admin" 
-    ? pathParts[pathParts.length - 1] 
-    : pathParts.length >= 2 ? pathParts[pathParts.length - 2] : pathParts[pathParts.length - 1];
-  const resourceId = pathParts[pathParts.length - 2] !== "admin" && pathParts.length >= 2 
-    ? pathParts[pathParts.length - 1] 
-    : null;
+
+  // Improved path parsing: find "admin" and take segments after it
+  const adminIdx = pathParts.indexOf("admin");
+  const afterAdmin = adminIdx >= 0 ? pathParts.slice(adminIdx + 1) : pathParts;
+  const resource = afterAdmin[0] || "";
+  const resourceId = afterAdmin[1] || null;
+  const subResource = afterAdmin[2] || null;
 
   try {
     const claims = await requireAdmin(req, jwtSecret);
@@ -159,32 +155,134 @@ serve(async (req) => {
 
     // ── Teams ──
     if (resource === "teams") {
+      // GET /teams — list all teams with member counts
       if (req.method === "GET" && !resourceId) {
-        const { data, error } = await supabase
+        const { data: teams, error } = await supabase
           .from("teams")
           .select("id, name, manager_id, created_at")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        return json({ teams: data });
+
+        // Fetch member counts and manager names
+        const teamIds = (teams || []).map((t) => t.id);
+        const managerIds = (teams || []).map((t) => t.manager_id).filter(Boolean);
+
+        const [membersRes, managersRes] = await Promise.all([
+          teamIds.length > 0
+            ? supabase.from("users").select("team_id").in("team_id", teamIds)
+            : Promise.resolve({ data: [] }),
+          managerIds.length > 0
+            ? supabase.from("users").select("id, first_name, last_name").in("id", managerIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const memberCounts: Record<string, number> = {};
+        (membersRes.data || []).forEach((u: { team_id: string }) => {
+          memberCounts[u.team_id] = (memberCounts[u.team_id] || 0) + 1;
+        });
+
+        const managerMap: Record<string, { first_name: string; last_name: string }> = {};
+        (managersRes.data || []).forEach((u: { id: string; first_name: string; last_name: string }) => {
+          managerMap[u.id] = u;
+        });
+
+        const enrichedTeams = (teams || []).map((t) => ({
+          ...t,
+          member_count: memberCounts[t.id] || 0,
+          manager: t.manager_id && managerMap[t.manager_id]
+            ? managerMap[t.manager_id]
+            : null,
+        }));
+
+        return json({ teams: enrichedTeams });
       }
 
-      if (req.method === "POST") {
+      // GET /teams/:id/members — list members of a team
+      if (req.method === "GET" && resourceId && subResource === "members") {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, email, first_name, last_name, role, status")
+          .eq("team_id", resourceId)
+          .order("first_name");
+        if (error) throw error;
+        return json({ members: data });
+      }
+
+      // POST /teams/:id/members — assign user(s) to team
+      if (req.method === "POST" && resourceId && subResource === "members") {
+        const { user_ids } = await req.json();
+        if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+          return json({ error: "user_ids array is required" }, 400);
+        }
+
+        const { error } = await supabase
+          .from("users")
+          .update({ team_id: resourceId })
+          .in("id", user_ids);
+        if (error) throw error;
+
+        return json({ success: true, assigned: user_ids.length });
+      }
+
+      // DELETE /teams/:id/members — remove user from team
+      if (req.method === "DELETE" && resourceId && subResource === "members") {
+        const { user_id } = await req.json();
+        if (!user_id) return json({ error: "user_id is required" }, 400);
+
+        const { error } = await supabase
+          .from("users")
+          .update({ team_id: null })
+          .eq("id", user_id);
+        if (error) throw error;
+
+        return json({ success: true });
+      }
+
+      // POST /teams — create team
+      if (req.method === "POST" && !resourceId) {
         const { name, manager_id } = await req.json();
         if (!name) return json({ error: "name is required" }, 400);
+
         const { data, error } = await supabase
           .from("teams")
           .insert({ name: name.trim(), manager_id: manager_id || null })
           .select("id, name, manager_id, created_at")
           .single();
         if (error) throw error;
+
+        // If manager assigned, update their team_id too
+        if (manager_id) {
+          await supabase.from("users").update({ team_id: data.id }).eq("id", manager_id);
+        }
+
         return json({ team: data }, 201);
       }
 
-      if (req.method === "PUT" && resourceId) {
+      // PUT /teams/:id — update team
+      if (req.method === "PUT" && resourceId && !subResource) {
         const body = await req.json();
         const updates: Record<string, unknown> = {};
         if (body.name !== undefined) updates.name = body.name.trim();
         if (body.manager_id !== undefined) updates.manager_id = body.manager_id || null;
+
+        // Get old manager to clear their team_id if manager changed
+        if (body.manager_id !== undefined) {
+          const { data: oldTeam } = await supabase
+            .from("teams")
+            .select("manager_id")
+            .eq("id", resourceId)
+            .single();
+
+          if (oldTeam?.manager_id && oldTeam.manager_id !== body.manager_id) {
+            // Clear old manager's team_id
+            await supabase.from("users").update({ team_id: null }).eq("id", oldTeam.manager_id);
+          }
+
+          // Set new manager's team_id
+          if (body.manager_id) {
+            await supabase.from("users").update({ team_id: resourceId }).eq("id", body.manager_id);
+          }
+        }
 
         const { data, error } = await supabase
           .from("teams")
