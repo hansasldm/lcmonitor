@@ -85,12 +85,35 @@ function ManagerDashboard() {
     refetchInterval: 30000,
   });
 
+  const hasTeam = data?.hasTeam !== false;
   const members: TeamMember[] = data?.members ?? [];
   const workingNow = members.filter((m) => m.is_working);
   const totalMembers = members.length;
   const avgSeconds = totalMembers > 0
     ? Math.floor(members.reduce((sum, m) => sum + (period === "today" ? m.today_seconds : m.period_seconds), 0) / totalMembers)
     : 0;
+
+  if (!isLoading && !hasTeam) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-display font-bold">Team Overview</h1>
+        <Card>
+          <CardContent className="py-12 text-center space-y-4">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground" />
+            <div>
+              <p className="text-lg font-medium">No Team Assigned</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {data?.message || "You haven't been assigned to a team yet."}
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => { /* placeholder */ }}>
+              Request Admin to Assign Team
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
