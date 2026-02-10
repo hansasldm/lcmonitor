@@ -21,4 +21,6 @@ export const workSessionsApi = {
   clockIn: () => request("clock-in", { method: "POST" }),
   clockOut: () => request("clock-out", { method: "POST" }),
   getActiveNow: () => request("active-now"),
+  getTeamOverview: (period: "today" | "week" = "today") =>
+    request(`team-overview?period=${period}`),
 };

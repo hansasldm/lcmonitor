@@ -22,11 +22,7 @@ async function verifyJWT(
     const encoder = new TextEncoder();
     const data = `${header}.${payload}`;
     const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"]
+      "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
     );
     const sig = signature.replace(/-/g, "+").replace(/_/g, "/");
     const sigPadded = sig + "=".repeat((4 - (sig.length % 4)) % 4);
@@ -53,6 +49,15 @@ function todayDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function weekStart(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -68,12 +73,14 @@ serve(async (req) => {
   if (!claims) return json({ error: "Unauthorized" }, 401);
 
   const userId = claims.sub as string;
+  const userRole = claims.role as string;
+  const userTeamId = claims.team_id as string | null;
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   const action = pathParts[pathParts.length - 1];
 
   try {
-    // GET /work-sessions/status — get today's session status
+    // GET /work-sessions/status
     if (action === "status" && req.method === "GET") {
       const { data: session, error } = await supabase
         .from("work_sessions")
@@ -81,20 +88,13 @@ serve(async (req) => {
         .eq("user_id", userId)
         .eq("date", todayDate())
         .maybeSingle();
-
       if (error) throw error;
-
-      return json({
-        session: session || null,
-        is_working: session ? !session.end_time : false,
-      });
+      return json({ session: session || null, is_working: session ? !session.end_time : false });
     }
 
     // POST /work-sessions/clock-in
     if (action === "clock-in" && req.method === "POST") {
       const today = todayDate();
-
-      // Check for existing open session today
       const { data: existing } = await supabase
         .from("work_sessions")
         .select("id, end_time")
@@ -102,33 +102,19 @@ serve(async (req) => {
         .eq("date", today)
         .maybeSingle();
 
-      if (existing && !existing.end_time) {
-        return json({ error: "Already clocked in" }, 409);
-      }
-
-      if (existing && existing.end_time) {
-        return json({ error: "Already completed a session today" }, 409);
-      }
+      if (existing && !existing.end_time) return json({ error: "Already clocked in" }, 409);
+      if (existing && existing.end_time) return json({ error: "Already completed a session today" }, 409);
 
       const now = new Date().toISOString();
       const { data: session, error } = await supabase
         .from("work_sessions")
-        .insert({
-          user_id: userId,
-          date: today,
-          start_time: now,
-          source: "MANUAL",
-        })
+        .insert({ user_id: userId, date: today, start_time: now, source: "MANUAL" })
         .select("id, start_time, end_time, total_active_seconds, date")
         .single();
-
       if (error) {
-        if (error.code === "23505") {
-          return json({ error: "Session already exists for today" }, 409);
-        }
+        if (error.code === "23505") return json({ error: "Session already exists for today" }, 409);
         throw error;
       }
-
       return json({ session, is_working: true }, 201);
     }
 
@@ -140,12 +126,8 @@ serve(async (req) => {
         .eq("user_id", userId)
         .eq("date", todayDate())
         .maybeSingle();
-
       if (fetchErr) throw fetchErr;
-
-      if (!session || session.end_time) {
-        return json({ error: "No active session to clock out" }, 400);
-      }
+      if (!session || session.end_time) return json({ error: "No active session to clock out" }, 400);
 
       const now = new Date();
       const startTime = new Date(session.start_time);
@@ -153,50 +135,133 @@ serve(async (req) => {
 
       const { data: updated, error: updateErr } = await supabase
         .from("work_sessions")
-        .update({
-          end_time: now.toISOString(),
-          total_active_seconds: activeSeconds,
-        })
+        .update({ end_time: now.toISOString(), total_active_seconds: activeSeconds })
         .eq("id", session.id)
         .select("id, start_time, end_time, total_active_seconds, date")
         .single();
-
       if (updateErr) throw updateErr;
-
       return json({ session: updated, is_working: false });
     }
 
-    // GET /work-sessions/active-now — admin: who is working now
+    // GET /work-sessions/active-now — admin/manager: who is working now
     if (action === "active-now" && req.method === "GET") {
       const { data, error } = await supabase
         .from("work_sessions")
         .select("id, user_id, start_time, date")
         .eq("date", todayDate())
         .is("end_time", null);
-
       if (error) throw error;
 
-      // Get user details for active sessions
       const userIds = (data || []).map((s) => s.user_id);
       let users: Record<string, { first_name: string; last_name: string; email: string }> = {};
-
       if (userIds.length > 0) {
         const { data: usersData } = await supabase
           .from("users")
           .select("id, first_name, last_name, email")
           .in("id", userIds);
-
-        if (usersData) {
-          users = Object.fromEntries(usersData.map((u) => [u.id, u]));
-        }
+        if (usersData) users = Object.fromEntries(usersData.map((u) => [u.id, u]));
       }
 
-      const activeSessions = (data || []).map((s) => ({
-        ...s,
-        user: users[s.user_id] || null,
-      }));
-
+      const activeSessions = (data || []).map((s) => ({ ...s, user: users[s.user_id] || null }));
       return json({ active_sessions: activeSessions });
+    }
+
+    // GET /work-sessions/team-overview — manager/admin: team members with session data
+    if (action === "team-overview" && req.method === "GET") {
+      if (userRole !== "MANAGER" && userRole !== "ADMIN") {
+        return json({ error: "Forbidden" }, 403);
+      }
+
+      const period = url.searchParams.get("period") || "today"; // "today" or "week"
+      const dateFrom = period === "week" ? weekStart() : todayDate();
+      const dateTo = todayDate();
+
+      // Get team_id: for manager use their own, for admin allow query param
+      let teamId = userTeamId;
+      if (userRole === "ADMIN" && url.searchParams.get("team_id")) {
+        teamId = url.searchParams.get("team_id");
+      }
+
+      if (!teamId) {
+        return json({ error: "No team assigned" }, 400);
+      }
+
+      // Get team members
+      const { data: members, error: membersErr } = await supabase
+        .from("users")
+        .select("id, email, first_name, last_name, role, status")
+        .eq("team_id", teamId)
+        .eq("status", "ACTIVE")
+        .order("first_name");
+      if (membersErr) throw membersErr;
+
+      if (!members || members.length === 0) {
+        return json({ members: [], team_id: teamId });
+      }
+
+      const memberIds = members.map((m) => m.id);
+
+      // Get work sessions for the period
+      let sessionsQuery = supabase
+        .from("work_sessions")
+        .select("id, user_id, date, start_time, end_time, total_active_seconds")
+        .in("user_id", memberIds)
+        .gte("date", dateFrom)
+        .lte("date", dateTo)
+        .order("date", { ascending: false });
+
+      const { data: sessions, error: sessionsErr } = await sessionsQuery;
+      if (sessionsErr) throw sessionsErr;
+
+      // Group sessions by user
+      const sessionsByUser: Record<string, Array<{
+        id: string; date: string; start_time: string;
+        end_time: string | null; total_active_seconds: number;
+      }>> = {};
+      (sessions || []).forEach((s) => {
+        if (!sessionsByUser[s.user_id]) sessionsByUser[s.user_id] = [];
+        sessionsByUser[s.user_id].push(s);
+      });
+
+      const now = Date.now();
+      const enrichedMembers = members.map((m) => {
+        const userSessions = sessionsByUser[m.id] || [];
+        const todaySessions = userSessions.filter((s) => s.date === todayDate());
+        const todaySession = todaySessions[0] || null;
+
+        const isWorking = todaySession ? !todaySession.end_time : false;
+
+        // Calculate today's seconds (live if still working)
+        let todaySeconds = 0;
+        if (todaySession) {
+          if (todaySession.end_time) {
+            todaySeconds = todaySession.total_active_seconds;
+          } else {
+            todaySeconds = Math.floor((now - new Date(todaySession.start_time).getTime()) / 1000);
+          }
+        }
+
+        // Total seconds for the period
+        let periodSeconds = 0;
+        userSessions.forEach((s) => {
+          if (s.end_time) {
+            periodSeconds += s.total_active_seconds;
+          } else {
+            periodSeconds += Math.floor((now - new Date(s.start_time).getTime()) / 1000);
+          }
+        });
+
+        return {
+          ...m,
+          is_working: isWorking,
+          today_seconds: todaySeconds,
+          period_seconds: periodSeconds,
+          today_session: todaySession,
+          session_count: userSessions.length,
+        };
+      });
+
+      return json({ members: enrichedMembers, team_id: teamId, period });
     }
 
     return json({ error: "Not found" }, 404);
