@@ -2,9 +2,11 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <SidebarProvider>
@@ -26,6 +28,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Badge variant="outline" className="text-xs">
                   {user.role}
                 </Badge>
+                <Button variant="ghost" size="icon" onClick={logout} title="Sign out">
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </header>
