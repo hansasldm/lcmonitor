@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AuthUser,
   login as authLogin,
@@ -23,17 +24,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(getStoredUser());
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (checkAuth()) {
       fetchCurrentUser()
-        .then((u) => setUser(u))
-        .catch(() => setUser(null))
+        .then((u) => {
+          if (!u) {
+            // Token was invalid/expired — clear everything
+            authLogout();
+            setUser(null);
+            navigate("/login", { replace: true });
+          } else {
+            setUser(u);
+          }
+        })
+        .catch(() => {
+          authLogout();
+          setUser(null);
+          navigate("/login", { replace: true });
+        })
         .finally(() => setIsLoading(false));
     } else {
+      setUser(null);
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authLogin(email, password);
@@ -51,7 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     authLogout();
     setUser(null);
-  }, []);
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   return (
     <AuthContext.Provider
