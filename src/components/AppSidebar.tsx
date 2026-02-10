@@ -7,6 +7,7 @@ import {
   Settings,
   Citrus,
   LogOut,
+  LogIn,
   UsersRound,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -27,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
+  { title: "My Workday", url: "/employee", icon: LogIn, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "My Timesheet", url: "/timesheet", icon: Clock, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Attendance", url: "/attendance", icon: CalendarCheck, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Team", url: "/team", icon: Users, roles: ["MANAGER", "ADMIN"] },
