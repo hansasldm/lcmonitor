@@ -132,6 +132,22 @@ serve(async (req) => {
       return json({ success: true, message: "Sample ACTIVITY event inserted", timestamp: now });
     }
 
+    // POST /agent/debug/make-admin — one-time: promote current user to ADMIN
+    if (action === "make-admin" && req.method === "POST") {
+      const ENABLED = false; // DISABLED — already have admin accounts
+      if (!ENABLED) return json({ error: "This debug endpoint is disabled" }, 403);
+
+      const { data, error } = await supabase
+        .from("users")
+        .update({ role: "ADMIN" })
+        .eq("id", userId)
+        .select("id, email, role")
+        .single();
+      if (error) throw error;
+
+      return json({ success: true, message: "You are now ADMIN. Disable this endpoint!", user: data });
+    }
+
     return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error("Agent error:", err);
