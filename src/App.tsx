@@ -14,6 +14,7 @@ import TeamPage from "@/pages/TeamPage";
 import AdminPage from "@/pages/AdminPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
+import EmployeeDashboardPage from "@/pages/EmployeeDashboardPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+            <Route path="/employee" element={<ProtectedPage><EmployeeDashboardPage /></ProtectedPage>} />
             <Route path="/timesheet" element={<ProtectedPage><TimesheetPage /></ProtectedPage>} />
             <Route path="/attendance" element={<ProtectedPage><AttendancePage /></ProtectedPage>} />
             <Route path="/team" element={<ProtectedPage><TeamPage /></ProtectedPage>} />

@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "@/lib/admin-api";
+import { workSessionsApi } from "@/lib/work-sessions-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Users, CalendarCheck, AlertTriangle, Activity, Timer, Settings, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -98,7 +99,14 @@ function AdminDashboard() {
     queryFn: adminApi.getStats,
   });
 
+  const { data: activeData } = useQuery({
+    queryKey: ["active-now"],
+    queryFn: workSessionsApi.getActiveNow,
+    refetchInterval: 30000,
+  });
+
   const stats = data ?? { totalUsers: 0, activeUsers: 0, totalTeams: 0, pendingCorrections: 0 };
+  const activeSessions = activeData?.active_sessions ?? [];
 
   return (
     <div className="space-y-6">
@@ -116,11 +124,11 @@ function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Today</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Working Now</CardTitle>
             <Activity className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : stats.activeUsers}</div>
+            <div className="text-2xl font-display font-bold">{activeSessions.length}</div>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all" onClick={() => navigate("/admin/teams")}>
@@ -142,6 +150,35 @@ function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Who is working now */}
+      {activeSessions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="h-5 w-5 text-success" />
+              Who's Working Now
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {activeSessions.map((s: { id: string; start_time: string; user: { first_name: string; last_name: string; email: string } | null }) => (
+                <div key={s.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {s.user ? `${s.user.first_name} ${s.user.last_name}` : "Unknown"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{s.user?.email}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Since {new Date(s.start_time).toLocaleTimeString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
