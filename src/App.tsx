@@ -12,9 +12,17 @@ import TimesheetPage from "@/pages/TimesheetPage";
 import AttendancePage from "@/pages/AttendancePage";
 import TeamPage from "@/pages/TeamPage";
 import AdminPage from "@/pages/AdminPage";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
+import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <AppLayout>{children}</AppLayout>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -25,56 +33,13 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Dashboard />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/timesheet"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TimesheetPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/attendance"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AttendancePage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/team"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TeamPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AdminPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+            <Route path="/timesheet" element={<ProtectedPage><TimesheetPage /></ProtectedPage>} />
+            <Route path="/attendance" element={<ProtectedPage><AttendancePage /></ProtectedPage>} />
+            <Route path="/team" element={<ProtectedPage><TeamPage /></ProtectedPage>} />
+            <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
+            <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
+            <Route path="/admin/teams" element={<ProtectedPage><AdminTeamsPage /></ProtectedPage>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

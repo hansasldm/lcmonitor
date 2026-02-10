@@ -7,6 +7,7 @@ import {
   Settings,
   Citrus,
   LogOut,
+  UsersRound,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,7 +30,12 @@ const navItems = [
   { title: "My Timesheet", url: "/timesheet", icon: Clock, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Attendance", url: "/attendance", icon: CalendarCheck, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Team", url: "/team", icon: Users, roles: ["MANAGER", "ADMIN"] },
-  { title: "Admin", url: "/admin", icon: Settings, roles: ["ADMIN"] },
+];
+
+const adminItems = [
+  { title: "Overview", url: "/admin", icon: Settings },
+  { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Teams", url: "/admin/teams", icon: UsersRound },
 ];
 
 export function AppSidebar() {
@@ -47,6 +53,8 @@ export function AppSidebar() {
     MANAGER: "bg-info text-info-foreground",
     EMPLOYEE: "bg-primary text-primary-foreground",
   };
+
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
     <Sidebar collapsible="icon">
@@ -81,6 +89,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {user?.role === "ADMIN" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === item.url}
+                      tooltip={item.title}
+                    >
+                      <NavLink to={item.url} end>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
