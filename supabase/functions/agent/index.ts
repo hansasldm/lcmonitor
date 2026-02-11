@@ -48,22 +48,30 @@ async function getUser(supabase: ReturnType<typeof createClient>, req: Request) 
   }
 }
 
-async function ensureDevice(supabase: ReturnType<typeof createClient>, userId: string) {
+async function ensureDevice(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  deviceId: string = WEB_DEVICE_ID,
+  osType: string = "WINDOWS"
+): Promise<string> {
+  const validOs = ["WINDOWS", "MACOS", "LINUX"].includes(osType) ? osType : "WINDOWS";
+  const now = new Date().toISOString();
+
   const { data: existing } = await supabase
     .from("devices")
     .select("id")
     .eq("user_id", userId)
-    .eq("device_id", WEB_DEVICE_ID)
+    .eq("device_id", deviceId)
     .maybeSingle();
 
   if (existing) {
-    await supabase.from("devices").update({ last_seen_at: new Date().toISOString() }).eq("id", existing.id);
+    await supabase.from("devices").update({ last_seen_at: now }).eq("id", existing.id);
     return existing.id;
   }
 
   const { data: newDevice } = await supabase
     .from("devices")
-    .insert({ user_id: userId, device_id: WEB_DEVICE_ID, os_type: "WINDOWS", last_seen_at: new Date().toISOString() })
+    .insert({ user_id: userId, device_id: deviceId, os_type: validOs, last_seen_at: now })
     .select("id")
     .single();
   return newDevice!.id;
@@ -87,31 +95,48 @@ serve(async (req) => {
   const action = pathParts[pathParts.length - 1];
 
   try {
-    // POST /agent/events — single event
+    // POST /agent/events — accepts single event or array of events
     if (action === "events" && req.method === "POST") {
       const body = await req.json();
-      const { type, timestamp, metadata } = body;
+      const events: Array<{ type: string; timestamp: string; metadata?: unknown; device_id?: string; os_type?: string }> =
+        Array.isArray(body) ? body : [body];
 
-      if (!type || !timestamp) {
-        return json({ error: "type and timestamp are required" }, 400);
+      if (events.length === 0) return json({ error: "At least one event is required" }, 400);
+      if (events.length > 500) return json({ error: "Maximum 500 events per request" }, 400);
+
+      // Validate all events first
+      for (let i = 0; i < events.length; i++) {
+        const ev = events[i];
+        if (!ev.type || !ev.timestamp) {
+          return json({ error: `Event[${i}]: type and timestamp are required` }, 400);
+        }
+        if (!VALID_EVENT_TYPES.includes(ev.type)) {
+          return json({ error: `Event[${i}]: invalid type "${ev.type}"` }, 400);
+        }
       }
-      if (!VALID_EVENT_TYPES.includes(type)) {
-        return json({ error: `Invalid event type: ${type}` }, 400);
+
+      // Collect unique device_ids and upsert them
+      const deviceIds = [...new Set(events.map((e) => e.device_id || WEB_DEVICE_ID))];
+      const deviceMap: Record<string, string> = {};
+      for (const did of deviceIds) {
+        const osHint = events.find((e) => (e.device_id || WEB_DEVICE_ID) === did)?.os_type;
+        deviceMap[did] = await ensureDevice(supabase, userId, did, osHint as string);
       }
 
-      const dbDeviceId = await ensureDevice(supabase, userId);
-
-      const { error } = await supabase.from("events").insert({
+      // Build rows
+      const rows = events.map((ev) => ({
         user_id: userId,
-        device_id: dbDeviceId,
-        type,
-        timestamp,
-        metadata: metadata || null,
+        device_id: deviceMap[ev.device_id || WEB_DEVICE_ID],
+        type: ev.type,
+        timestamp: ev.timestamp,
+        metadata: ev.metadata || null,
         processed: false,
-      });
+      }));
+
+      const { error } = await supabase.from("events").insert(rows);
       if (error) throw error;
 
-      return json({ success: true });
+      return json({ success: true, insertedCount: rows.length });
     }
 
     // POST /agent/test-activity — insert a sample ACTIVITY event
