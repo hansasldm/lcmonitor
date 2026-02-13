@@ -1,5 +1,9 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1/auth`;
+
+// Standard Supabase-compatible storage key so desktop agents can find the session
+const SB_AUTH_KEY = `sb-${SUPABASE_PROJECT_ID}-auth-token`;
 
 export interface AuthUser {
   id: string;
@@ -16,15 +20,31 @@ interface AuthResponse {
 }
 
 function getToken(): string | null {
+  // Try standard key first, fall back to legacy
+  const sbData = localStorage.getItem(SB_AUTH_KEY);
+  if (sbData) {
+    try {
+      const parsed = JSON.parse(sbData);
+      return parsed.access_token || null;
+    } catch { /* ignore */ }
+  }
   return localStorage.getItem("auth_token");
 }
 
 function setToken(token: string) {
   localStorage.setItem("auth_token", token);
+  // Also store in standard sb-*-auth-token format
+  const sbSession = {
+    access_token: token,
+    token_type: "bearer",
+    expires_at: Math.floor(Date.now() / 1000) + 86400,
+  };
+  localStorage.setItem(SB_AUTH_KEY, JSON.stringify(sbSession));
 }
 
 function clearToken() {
   localStorage.removeItem("auth_token");
+  localStorage.removeItem(SB_AUTH_KEY);
 }
 
 export function getStoredUser(): AuthUser | null {
