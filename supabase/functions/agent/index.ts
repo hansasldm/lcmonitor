@@ -157,9 +157,77 @@ serve(async (req) => {
       return json({ success: true, message: "Sample ACTIVITY event inserted", timestamp: now });
     }
 
+    // POST /agent/heartbeat — heartbeat-based session tracking
+    if (action === "heartbeat" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const deviceIdRaw: string = body.device_id || WEB_DEVICE_ID;
+      const osType: string = body.os_type || "WINDOWS";
+      const now = new Date();
+      const nowISO = now.toISOString();
+      const todayDate = nowISO.slice(0, 10); // YYYY-MM-DD
+
+      // 1. Upsert device
+      const dbDeviceId = await ensureDevice(supabase, userId, deviceIdRaw, osType);
+
+      // 2. Insert heartbeat record
+      await supabase.from("heartbeats").insert({
+        user_id: userId,
+        device_id: dbDeviceId,
+        timestamp: nowISO,
+        last_seen: nowISO,
+      });
+
+      // 3. Close any stale sessions (no heartbeat for 5 min) for this user
+      const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+      const { data: staleSessions } = await supabase
+        .from("work_sessions")
+        .select("id, updated_at")
+        .eq("user_id", userId)
+        .is("end_time", null)
+        .lt("updated_at", fiveMinAgo);
+
+      if (staleSessions && staleSessions.length > 0) {
+        for (const s of staleSessions) {
+          await supabase
+            .from("work_sessions")
+            .update({ end_time: s.updated_at, updated_at: nowISO })
+            .eq("id", s.id);
+        }
+      }
+
+      // 4. Check for active session today
+      const { data: activeSession } = await supabase
+        .from("work_sessions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("date", todayDate)
+        .is("end_time", null)
+        .maybeSingle();
+
+      if (activeSession) {
+        // Update last_seen (via updated_at)
+        await supabase
+          .from("work_sessions")
+          .update({ updated_at: nowISO })
+          .eq("id", activeSession.id);
+      } else {
+        // No active session → create one (auto clock-in)
+        await supabase.from("work_sessions").insert({
+          user_id: userId,
+          date: todayDate,
+          start_time: nowISO,
+          source: "AUTO",
+          total_active_seconds: 0,
+          total_idle_seconds: 0,
+        });
+      }
+
+      return json({ success: true });
+    }
+
     // POST /agent/debug/make-admin — one-time: promote current user to ADMIN
     if (action === "make-admin" && req.method === "POST") {
-      const ENABLED = false; // DISABLED — already have admin accounts
+      const ENABLED = false;
       if (!ENABLED) return json({ error: "This debug endpoint is disabled" }, 403);
 
       const { data, error } = await supabase
