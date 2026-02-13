@@ -192,6 +192,45 @@ export type Database = {
           },
         ]
       }
+      heartbeats: {
+        Row: {
+          device_id: string
+          id: string
+          last_seen: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          id?: string
+          last_seen?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          id?: string
+          last_seen?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "heartbeats_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "heartbeats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
