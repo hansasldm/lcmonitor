@@ -9,6 +9,7 @@ import {
   getStoredUser,
   isAuthenticated as checkAuth,
 } from "@/lib/auth";
+import { useHeartbeat } from "@/hooks/useHeartbeat";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -75,6 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     navigate("/login", { replace: true });
   }, [navigate]);
+
+  // Send heartbeat every 30s while authenticated
+  useHeartbeat(!!user);
 
   return (
     <AuthContext.Provider
