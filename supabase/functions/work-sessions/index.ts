@@ -1,18 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+// ── CORS (restricted origins) ──
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed =
+    origin.endsWith(".lovable.app") || origin.startsWith("http://localhost");
+  return {
+    "Access-Control-Allow-Origin": allowed ? origin : "",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+// ── Validation ──
+function isUUID(v: unknown): boolean {
+  return typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
+const VALID_PERIODS = ["today", "week"];
+function validatePeriod(v: unknown): string {
+  if (typeof v === "string" && VALID_PERIODS.includes(v)) return v;
+  return "today";
+}
 
+// ── JWT verify ──
 async function verifyJWT(
   token: string,
   secret: string
@@ -21,9 +32,7 @@ async function verifyJWT(
     const [header, payload, signature] = token.split(".");
     const encoder = new TextEncoder();
     const data = `${header}.${payload}`;
-    const key = await crypto.subtle.importKey(
-      "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
-    );
+    const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
     const sig = signature.replace(/-/g, "+").replace(/_/g, "/");
     const sigPadded = sig + "=".repeat((4 - (sig.length % 4)) % 4);
     const sigBytes = Uint8Array.from(atob(sigPadded), (c) => c.charCodeAt(0));
@@ -52,15 +61,19 @@ function todayDate(): string {
 function weekStart(): string {
   const d = new Date();
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(d);
   monday.setDate(diff);
   return monday.toISOString().slice(0, 10);
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
   }
 
   const supabase = createClient(
@@ -143,7 +156,7 @@ serve(async (req) => {
       return json({ session: updated, is_working: false });
     }
 
-    // GET /work-sessions/active-now — admin/manager: who is working now
+    // GET /work-sessions/active-now
     if (action === "active-now" && req.method === "GET") {
       const { data, error } = await supabase
         .from("work_sessions")
@@ -166,27 +179,26 @@ serve(async (req) => {
       return json({ active_sessions: activeSessions });
     }
 
-    // GET /work-sessions/team-overview — manager/admin: team members with session data
+    // GET /work-sessions/team-overview
     if (action === "team-overview" && req.method === "GET") {
       if (userRole !== "MANAGER" && userRole !== "ADMIN") {
         return json({ error: "Forbidden" }, 403);
       }
 
-      const period = url.searchParams.get("period") || "today"; // "today" or "week"
+      const period = validatePeriod(url.searchParams.get("period"));
       const dateFrom = period === "week" ? weekStart() : todayDate();
       const dateTo = todayDate();
 
-      // Get team_id: for manager use their own, for admin allow query param
       let teamId = userTeamId;
       if (userRole === "ADMIN" && url.searchParams.get("team_id")) {
-        teamId = url.searchParams.get("team_id");
+        const tid = url.searchParams.get("team_id");
+        if (tid && isUUID(tid)) teamId = tid;
       }
 
       if (!teamId) {
         return json({ hasTeam: false, members: [], message: "No team assigned. Ask admin to assign you to a team." });
       }
 
-      // Get team members
       const { data: members, error: membersErr } = await supabase
         .from("users")
         .select("id, email, first_name, last_name, role, status")
@@ -201,19 +213,15 @@ serve(async (req) => {
 
       const memberIds = members.map((m) => m.id);
 
-      // Get work sessions for the period
-      let sessionsQuery = supabase
+      const { data: sessions, error: sessionsErr } = await supabase
         .from("work_sessions")
         .select("id, user_id, date, start_time, end_time, total_active_seconds")
         .in("user_id", memberIds)
         .gte("date", dateFrom)
         .lte("date", dateTo)
         .order("date", { ascending: false });
-
-      const { data: sessions, error: sessionsErr } = await sessionsQuery;
       if (sessionsErr) throw sessionsErr;
 
-      // Group sessions by user
       const sessionsByUser: Record<string, Array<{
         id: string; date: string; start_time: string;
         end_time: string | null; total_active_seconds: number;
@@ -231,7 +239,6 @@ serve(async (req) => {
 
         const isWorking = todaySession ? !todaySession.end_time : false;
 
-        // Calculate today's seconds (live if still working)
         let todaySeconds = 0;
         if (todaySession) {
           if (todaySession.end_time) {
@@ -241,7 +248,6 @@ serve(async (req) => {
           }
         }
 
-        // Total seconds for the period
         let periodSeconds = 0;
         userSessions.forEach((s) => {
           if (s.end_time) {
