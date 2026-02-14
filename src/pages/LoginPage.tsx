@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck } from "lucide-react";
+import { ScanFace } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -34,7 +34,7 @@ const LoginPage = () => {
       <Card className="w-full max-w-md border-border shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <ShieldCheck className="h-8 w-8 text-primary-foreground" />
+            <ScanFace className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display">SLM Employee Tracking</CardTitle>
