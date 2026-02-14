@@ -37,7 +37,7 @@ const LoginPage = () => {
             <Citrus className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">Lemoncode</CardTitle>
+            <CardTitle className="text-2xl font-display">SLM Employee Tracking</CardTitle>
             <CardDescription className="mt-1">Employee Time & Activity Tracking</CardDescription>
           </div>
         </CardHeader>

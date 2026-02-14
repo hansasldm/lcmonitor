@@ -66,7 +66,7 @@ export function AppSidebar() {
         <Citrus className="h-6 w-6 shrink-0 text-sidebar-primary" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
-            Lemoncode
+            SLM Tracking
           </span>
         )}
       </div>
