@@ -5,7 +5,7 @@ import {
   CalendarCheck,
   Users,
   Settings,
-  Citrus,
+  ShieldCheck,
   LogOut,
   LogIn,
   UsersRound,
@@ -63,7 +63,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <Citrus className="h-6 w-6 shrink-0 text-sidebar-primary" />
+        <ShieldCheck className="h-6 w-6 shrink-0 text-sidebar-primary" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
             SLM Tracking
