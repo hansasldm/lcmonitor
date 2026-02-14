@@ -5,7 +5,7 @@ import {
   CalendarCheck,
   Users,
   Settings,
-  ScanFace,
+  Building2,
   LogOut,
   LogIn,
   UsersRound,
@@ -63,7 +63,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <ScanFace className="h-6 w-6 shrink-0 text-sidebar-primary" />
+        <Building2 className="h-6 w-6 shrink-0 text-sidebar-primary" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
             SLM Tracking
