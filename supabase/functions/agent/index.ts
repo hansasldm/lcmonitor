@@ -1,26 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+// ── CORS (restricted origins) ──
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed =
+    origin.endsWith(".lovable.app") || origin.startsWith("http://localhost");
+  return {
+    "Access-Control-Allow-Origin": allowed ? origin : "",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-
+// ── Validation ──
 const VALID_EVENT_TYPES = [
   "LOGIN", "LOGOUT", "ACTIVITY", "IDLE_START", "IDLE_END",
   "MANUAL_CLOCK_IN", "MANUAL_CLOCK_OUT",
 ];
+const VALID_OS_TYPES = ["WINDOWS", "MACOS", "LINUX"];
+
+function validateDeviceId(v: unknown): string {
+  if (typeof v !== "string" || v.length === 0 || v.length > 200) return "web-test-device";
+  return v;
+}
+function validateOsType(v: unknown): string {
+  if (typeof v === "string" && VALID_OS_TYPES.includes(v)) return v;
+  return "WINDOWS";
+}
+function isValidTimestamp(v: unknown): boolean {
+  if (typeof v !== "string") return false;
+  const d = new Date(v);
+  return !isNaN(d.getTime());
+}
+function isValidMetadata(v: unknown): boolean {
+  if (v === null || v === undefined) return true;
+  if (typeof v !== "object" || Array.isArray(v)) return false;
+  const str = JSON.stringify(v);
+  return str.length <= 10000; // 10KB max
+}
 
 const WEB_DEVICE_ID = "web-test-device";
 
-async function getUser(supabase: ReturnType<typeof createClient>, req: Request) {
+async function getUser(_supabase: ReturnType<typeof createClient>, req: Request) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return null;
   const token = authHeader.replace("Bearer ", "");
@@ -54,7 +76,7 @@ async function ensureDevice(
   deviceId: string = WEB_DEVICE_ID,
   osType: string = "WINDOWS"
 ): Promise<string> {
-  const validOs = ["WINDOWS", "MACOS", "LINUX"].includes(osType) ? osType : "WINDOWS";
+  const validOs = VALID_OS_TYPES.includes(osType) ? osType : "WINDOWS";
   const now = new Date().toISOString();
 
   const { data: existing } = await supabase
@@ -78,8 +100,12 @@ async function ensureDevice(
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
   }
 
   const supabase = createClient(
@@ -95,38 +121,40 @@ serve(async (req) => {
   const action = pathParts[pathParts.length - 1];
 
   try {
-    // POST /agent/events — accepts single event or array of events
+    // POST /agent/events
     if (action === "events" && req.method === "POST") {
-      const body = await req.json();
+      const body = await req.json().catch(() => null);
+      if (!body) return json({ error: "Invalid JSON body" }, 400);
+
       const events: Array<{ type: string; timestamp: string; metadata?: unknown; device_id?: string; os_type?: string }> =
         Array.isArray(body) ? body : [body];
 
       if (events.length === 0) return json({ error: "At least one event is required" }, 400);
       if (events.length > 500) return json({ error: "Maximum 500 events per request" }, 400);
 
-      // Validate all events first
       for (let i = 0; i < events.length; i++) {
         const ev = events[i];
-        if (!ev.type || !ev.timestamp) {
-          return json({ error: `Event[${i}]: type and timestamp are required` }, 400);
+        if (!ev.type || !VALID_EVENT_TYPES.includes(ev.type)) {
+          return json({ error: `Event[${i}]: invalid or missing type` }, 400);
         }
-        if (!VALID_EVENT_TYPES.includes(ev.type)) {
-          return json({ error: `Event[${i}]: invalid type "${ev.type}"` }, 400);
+        if (!isValidTimestamp(ev.timestamp)) {
+          return json({ error: `Event[${i}]: invalid or missing timestamp` }, 400);
+        }
+        if (!isValidMetadata(ev.metadata)) {
+          return json({ error: `Event[${i}]: metadata must be an object under 10KB` }, 400);
         }
       }
 
-      // Collect unique device_ids and upsert them
-      const deviceIds = [...new Set(events.map((e) => e.device_id || WEB_DEVICE_ID))];
+      const deviceIds = [...new Set(events.map((e) => validateDeviceId(e.device_id) || WEB_DEVICE_ID))];
       const deviceMap: Record<string, string> = {};
       for (const did of deviceIds) {
-        const osHint = events.find((e) => (e.device_id || WEB_DEVICE_ID) === did)?.os_type;
-        deviceMap[did] = await ensureDevice(supabase, userId, did, osHint as string);
+        const osHint = events.find((e) => (validateDeviceId(e.device_id) || WEB_DEVICE_ID) === did)?.os_type;
+        deviceMap[did] = await ensureDevice(supabase, userId, did, validateOsType(osHint));
       }
 
-      // Build rows
       const rows = events.map((ev) => ({
         user_id: userId,
-        device_id: deviceMap[ev.device_id || WEB_DEVICE_ID],
+        device_id: deviceMap[validateDeviceId(ev.device_id) || WEB_DEVICE_ID],
         type: ev.type,
         timestamp: ev.timestamp,
         metadata: ev.metadata || null,
@@ -139,7 +167,7 @@ serve(async (req) => {
       return json({ success: true, insertedCount: rows.length });
     }
 
-    // POST /agent/test-activity — insert a sample ACTIVITY event
+    // POST /agent/test-activity
     if (action === "test-activity" && req.method === "POST") {
       const dbDeviceId = await ensureDevice(supabase, userId);
       const now = new Date().toISOString();
@@ -157,19 +185,17 @@ serve(async (req) => {
       return json({ success: true, message: "Sample ACTIVITY event inserted", timestamp: now });
     }
 
-    // POST /agent/heartbeat — heartbeat-based session tracking
+    // POST /agent/heartbeat
     if (action === "heartbeat" && req.method === "POST") {
       const body = await req.json().catch(() => ({}));
-      const deviceIdRaw: string = body.device_id || WEB_DEVICE_ID;
-      const osType: string = body.os_type || "WINDOWS";
+      const deviceIdRaw = validateDeviceId(body.device_id);
+      const osType = validateOsType(body.os_type);
       const now = new Date();
       const nowISO = now.toISOString();
-      const todayDate = nowISO.slice(0, 10); // YYYY-MM-DD
+      const todayDate = nowISO.slice(0, 10);
 
-      // 1. Upsert device
       const dbDeviceId = await ensureDevice(supabase, userId, deviceIdRaw, osType);
 
-      // 2. Insert heartbeat record
       await supabase.from("heartbeats").insert({
         user_id: userId,
         device_id: dbDeviceId,
@@ -177,7 +203,6 @@ serve(async (req) => {
         last_seen: nowISO,
       });
 
-      // 3. Close any stale sessions (no heartbeat for 5 min) for this user
       const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
       const { data: staleSessions } = await supabase
         .from("work_sessions")
@@ -195,7 +220,6 @@ serve(async (req) => {
         }
       }
 
-      // 4. Check for active session today
       const { data: activeSession } = await supabase
         .from("work_sessions")
         .select("id")
@@ -205,13 +229,11 @@ serve(async (req) => {
         .maybeSingle();
 
       if (activeSession) {
-        // Update last_seen (via updated_at)
         await supabase
           .from("work_sessions")
           .update({ updated_at: nowISO })
           .eq("id", activeSession.id);
       } else {
-        // No active session → create one (auto clock-in)
         await supabase.from("work_sessions").insert({
           user_id: userId,
           date: todayDate,
@@ -225,20 +247,9 @@ serve(async (req) => {
       return json({ success: true });
     }
 
-    // POST /agent/debug/make-admin — one-time: promote current user to ADMIN
+    // POST /agent/debug/make-admin (disabled)
     if (action === "make-admin" && req.method === "POST") {
-      const ENABLED = false;
-      if (!ENABLED) return json({ error: "This debug endpoint is disabled" }, 403);
-
-      const { data, error } = await supabase
-        .from("users")
-        .update({ role: "ADMIN" })
-        .eq("id", userId)
-        .select("id, email, role")
-        .single();
-      if (error) throw error;
-
-      return json({ success: true, message: "You are now ADMIN. Disable this endpoint!", user: data });
+      return json({ error: "This debug endpoint is disabled" }, 403);
     }
 
     return json({ error: "Not found" }, 404);
