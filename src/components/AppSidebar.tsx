@@ -5,12 +5,12 @@ import {
   CalendarCheck,
   Users,
   Settings,
-  Building2,
   LogOut,
   LogIn,
   UsersRound,
   Activity,
 } from "lucide-react";
+import companyLogo from "@/assets/company-logo.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -63,7 +63,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <Building2 className="h-6 w-6 shrink-0 text-sidebar-primary" />
+        <img src={companyLogo} alt="SLM Logo" className="h-7 w-7 shrink-0 object-contain" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
             SLM Tracking
