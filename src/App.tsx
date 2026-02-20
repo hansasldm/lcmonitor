@@ -15,6 +15,7 @@ import AdminPage from "@/pages/AdminPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
 import AdminEventsPage from "@/pages/admin/AdminEventsPage";
+import AdminScreenshotsPage from "@/pages/admin/AdminScreenshotsPage";
 import EmployeeDashboardPage from "@/pages/EmployeeDashboardPage";
 import NotFound from "@/pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
             <Route path="/admin/teams" element={<ProtectedPage><AdminTeamsPage /></ProtectedPage>} />
             <Route path="/admin/events" element={<ProtectedPage><AdminEventsPage /></ProtectedPage>} />
+            <Route path="/admin/screenshots" element={<ProtectedPage><AdminScreenshotsPage /></ProtectedPage>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
