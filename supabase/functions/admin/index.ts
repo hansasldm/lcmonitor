@@ -376,6 +376,58 @@ serve(async (req) => {
       return json({ events: enriched });
     }
 
+    // ── Screenshot Upload ──
+    if (resource === "screenshots" && req.method === "POST") {
+      const contentType = req.headers.get("content-type") || "";
+      if (!contentType.includes("multipart/form-data")) {
+        return json({ error: "Expected multipart/form-data" }, 400);
+      }
+
+      const formData = await req.formData();
+      const file = formData.get("file") as File | null;
+      const userId = formData.get("user_id") as string | null;
+
+      if (!file || !userId || !isUUID(userId)) {
+        return json({ error: "file and valid user_id are required" }, 400);
+      }
+
+      const allowedTypes = ["image/png", "image/jpeg"];
+      if (!allowedTypes.includes(file.type)) {
+        return json({ error: "Only PNG and JPEG files are allowed" }, 400);
+      }
+
+      const storagePath = `${userId}/${Date.now()}.png`;
+      const fileBuffer = await file.arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from("screenshots")
+        .upload(storagePath, fileBuffer, { contentType: file.type, upsert: false });
+
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        return json({ error: `Upload failed: ${uploadError.message}` }, 500);
+      }
+
+      const { data: record, error: insertError } = await supabase
+        .from("screenshots")
+        .insert({
+          session_id: null,
+          user_id: userId,
+          storage_path: storagePath,
+          taken_at: new Date().toISOString(),
+          is_blurred: false,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("DB insert error:", insertError);
+        return json({ error: `DB insert failed: ${insertError.message}` }, 500);
+      }
+
+      return json({ success: true, screenshot: record }, 201);
+    }
+
     return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error("Admin error:", err);
