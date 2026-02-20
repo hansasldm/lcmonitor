@@ -9,6 +9,7 @@ import {
   LogIn,
   UsersRound,
   Activity,
+  Camera,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -40,6 +41,7 @@ const adminItems = [
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Teams", url: "/admin/teams", icon: UsersRound },
   { title: "Events", url: "/admin/events", icon: Activity },
+  { title: "Screenshots", url: "/admin/screenshots", icon: Camera },
 ];
 
 export function AppSidebar() {

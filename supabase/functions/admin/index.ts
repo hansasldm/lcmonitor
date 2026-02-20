@@ -376,7 +376,53 @@ serve(async (req) => {
       return json({ events: enriched });
     }
 
-    // ── Screenshot Upload ──
+    // ── Screenshots ──
+    if (resource === "screenshots" && req.method === "GET") {
+      const userId = url.searchParams.get("user_id");
+      const date = url.searchParams.get("date"); // YYYY-MM-DD
+
+      let query = supabase
+        .from("screenshots")
+        .select("id, user_id, storage_path, taken_at, is_blurred, session_id")
+        .order("taken_at", { ascending: false });
+
+      if (userId && isUUID(userId)) query = query.eq("user_id", userId);
+      if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        query = query.gte("taken_at", `${date}T00:00:00Z`).lt("taken_at", `${date}T23:59:59.999Z`);
+      }
+      query = query.limit(200);
+
+      const { data: screenshots, error } = await query;
+      if (error) throw error;
+
+      // Generate signed URLs (60s)
+      const withUrls = await Promise.all(
+        (screenshots || []).map(async (s: Record<string, unknown>) => {
+          const { data: signedData } = await supabase.storage
+            .from("screenshots")
+            .createSignedUrl(s.storage_path as string, 60);
+          return { ...s, signed_url: signedData?.signedUrl || null };
+        })
+      );
+
+      // Get user info
+      const userIds = [...new Set(withUrls.map((s) => s.user_id as string))];
+      const { data: users } = userIds.length > 0
+        ? await supabase.from("users").select("id, email, first_name, last_name").in("id", userIds)
+        : { data: [] };
+      const userMap: Record<string, { email: string; first_name: string; last_name: string }> = {};
+      (users || []).forEach((u: { id: string; email: string; first_name: string; last_name: string }) => {
+        userMap[u.id] = u;
+      });
+
+      const enriched = withUrls.map((s) => ({
+        ...s,
+        user: userMap[s.user_id as string] || null,
+      }));
+
+      return json({ screenshots: enriched });
+    }
+
     if (resource === "screenshots" && req.method === "POST") {
       const contentType = req.headers.get("content-type") || "";
       if (!contentType.includes("multipart/form-data")) {
