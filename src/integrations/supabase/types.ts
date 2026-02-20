@@ -231,6 +231,36 @@ export type Database = {
           },
         ]
       }
+      screenshots: {
+        Row: {
+          created_at: string
+          id: string
+          is_blurred: boolean
+          session_id: string | null
+          storage_path: string
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_blurred?: boolean
+          session_id?: string | null
+          storage_path: string
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_blurred?: boolean
+          session_id?: string | null
+          storage_path?: string
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
