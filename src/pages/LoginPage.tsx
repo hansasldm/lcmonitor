@@ -34,10 +34,10 @@ const LoginPage = () => {
       <Card className="w-full max-w-md border-border shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl">
-            <img src={companyLogo} alt="SLM Logo" className="h-16 w-16 object-contain" />
+            <img src={companyLogo} alt="LC Logo" className="h-16 w-16 object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">SLM Employee Tracking</CardTitle>
+            <CardTitle className="text-2xl font-display">LC Tracker</CardTitle>
             <CardDescription className="mt-1">Employee Time & Activity Tracking</CardDescription>
           </div>
         </CardHeader>

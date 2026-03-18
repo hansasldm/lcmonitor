@@ -65,10 +65,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <img src={companyLogo} alt="SLM Logo" className="h-7 w-7 shrink-0 object-contain" />
+        <img src={companyLogo} alt="LC Logo" className="h-7 w-7 shrink-0 object-contain" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
-            SLM Tracking
+            LC Tracker
           </span>
         )}
       </div>
