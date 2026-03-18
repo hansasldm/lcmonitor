@@ -42,7 +42,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi! I'm your SLM Assistant. How can I help you today?",
+      content: "Hi! I'm your LC Assistant. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
