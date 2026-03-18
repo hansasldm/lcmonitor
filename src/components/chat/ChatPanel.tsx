@@ -28,7 +28,7 @@ function getMockResponse(input: string): string {
     return "Your Timesheet This Week:\n• Mon: 8h 12m\n• Tue: 7h 45m\n• Wed: 8h 30m\n• Thu: 8h 05m (today so far)\n\nTotal: 32h 32m — you're on track for a full 40-hour week.";
   }
 
-  return "I can help you with attendance tracking, timesheets, screenshots, and general app usage. Try one of the quick actions above, or ask me anything about SLM Employee Tracking!";
+  return "I can help you with attendance tracking, timesheets, screenshots, and general app usage. Try one of the quick actions above, or ask me anything about LC Tracker!";
 }
 // ──────────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi! I'm your SLM Assistant. How can I help you today?",
+      content: "Hi! I'm your LC Assistant. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
@@ -111,7 +111,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
             <Bot className="h-4.5 w-4.5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold leading-tight">SLM Assistant</h3>
+            <h3 className="text-sm font-semibold leading-tight">LC Assistant</h3>
             <p className="text-[11px] opacity-80 leading-tight">
               Ask about attendance, timesheets, screenshots & more
             </p>
