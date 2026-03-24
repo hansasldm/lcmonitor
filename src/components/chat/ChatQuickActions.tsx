@@ -21,12 +21,6 @@ const defaultQuickActions: QuickAction[] = [
     message: "Show today's attendance",
   },
   {
-    label: "Open screenshots page",
-    icon: <Camera className="h-3.5 w-3.5" />,
-    message: "Open screenshots page",
-    navigateTo: "/admin/screenshots",
-  },
-  {
     label: "Explain my timesheet",
     icon: <FileText className="h-3.5 w-3.5" />,
     message: "Explain my timesheet",

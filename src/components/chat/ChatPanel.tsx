@@ -110,7 +110,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           <div>
             <h3 className="text-sm font-semibold leading-tight">LC Assistant</h3>
             <p className="text-[11px] opacity-80 leading-tight">
-              Ask about attendance, timesheets, screenshots & more
+              Ask about attendance, timesheets & more
             </p>
           </div>
         </div>

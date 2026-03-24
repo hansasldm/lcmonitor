@@ -47,7 +47,7 @@ const App = () => (
             <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
             <Route path="/admin/teams" element={<ProtectedPage><AdminTeamsPage /></ProtectedPage>} />
             
-            <Route path="/admin/screenshots" element={<ProtectedPage><AdminScreenshotsPage /></ProtectedPage>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
