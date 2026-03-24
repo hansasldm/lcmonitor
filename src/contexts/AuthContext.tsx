@@ -77,9 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     navigate("/login", { replace: true });
   }, [navigate]);
 
-  // Send heartbeat every 30s while authenticated
-  useHeartbeat(!!user);
-
   return (
     <AuthContext.Provider
       value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout }}
