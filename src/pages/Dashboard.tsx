@@ -20,35 +20,44 @@ import { useNavigate } from "react-router-dom";
 function EmployeeDashboard() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Good morning!</h1>
+      <div>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Good morning!</h1>
+        <p className="text-sm text-muted-foreground mt-1">Here's your workday overview</p>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Today's Status</CardTitle>
-            <Clock className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Today's Status</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">Not Clocked In</div>
+            <div className="text-2xl font-display font-bold tracking-tight">Not Clocked In</div>
             <p className="text-xs text-muted-foreground mt-1">Clock in to start tracking</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Hours Today</CardTitle>
-            <Timer className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hours Today</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Timer className="h-4 w-4 text-accent" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">0h 0m</div>
+            <div className="text-2xl font-display font-bold tracking-tight">0h 0m</div>
             <p className="text-xs text-muted-foreground mt-1">Active time</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">This Week</CardTitle>
-            <Activity className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">This Week</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-info" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">0h 0m</div>
+            <div className="text-2xl font-display font-bold tracking-tight">0h 0m</div>
             <p className="text-xs text-muted-foreground mt-1">of 40h target</p>
           </CardContent>
         </Card>
@@ -96,17 +105,19 @@ function ManagerDashboard() {
   if (!isLoading && !hasTeam) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-display font-bold">Team Overview</h1>
-        <Card>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Team Overview</h1>
+        <Card className="shadow-card">
           <CardContent className="py-12 text-center space-y-4">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground" />
+            <div className="h-14 w-14 mx-auto rounded-full bg-muted flex items-center justify-center">
+              <Users className="h-7 w-7 text-muted-foreground" />
+            </div>
             <div>
-              <p className="text-lg font-medium">No Team Assigned</p>
+              <p className="text-lg font-display font-semibold">No Team Assigned</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {data?.message || "You haven't been assigned to a team yet."}
               </p>
             </div>
-            <Button variant="outline" onClick={() => { /* placeholder */ }}>
+            <Button variant="outline" size="sm">
               Request Admin to Assign Team
             </Button>
           </CardContent>
@@ -118,19 +129,24 @@ function ManagerDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-display font-bold">Team Overview</h1>
-        <div className="flex gap-2">
+        <div>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Team Overview</h1>
+          <p className="text-sm text-muted-foreground mt-1">Monitor your team's attendance and activity</p>
+        </div>
+        <div className="flex gap-1.5 bg-muted p-1 rounded-lg">
           <Button
-            variant={period === "today" ? "default" : "outline"}
+            variant={period === "today" ? "default" : "ghost"}
             size="sm"
             onClick={() => setPeriod("today")}
+            className="h-7 text-xs px-3"
           >
             Today
           </Button>
           <Button
-            variant={period === "week" ? "default" : "outline"}
+            variant={period === "week" ? "default" : "ghost"}
             size="sm"
             onClick={() => setPeriod("week")}
+            className="h-7 text-xs px-3"
           >
             This Week
           </Button>
@@ -138,45 +154,53 @@ function ManagerDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Team Members</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Team Members</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : totalMembers}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : totalMembers}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Working Now</CardTitle>
-            <Activity className="h-4 w-4 text-success" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Working Now</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : workingNow.length}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : workingNow.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {totalMembers > 0 ? `${Math.round((workingNow.length / totalMembers) * 100)}% of team` : ""}
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Avg Hours {period === "today" ? "Today" : "This Week"}
             </CardTitle>
-            <Clock className="h-4 w-4 text-info" />
+            <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-info" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : formatDuration(avgSeconds)}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : formatDuration(avgSeconds)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Sessions</CardTitle>
-            <CalendarCheck className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sessions</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CalendarCheck className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">
+            <div className="text-2xl font-display font-bold tracking-tight">
               {isLoading ? "…" : members.reduce((sum, m) => sum + m.session_count, 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">{period === "today" ? "today" : "this week"}</p>
@@ -184,11 +208,10 @@ function ManagerDashboard() {
         </Card>
       </div>
 
-      {/* Team Members Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
+      <Card className="shadow-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display font-semibold flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
             Team Members
           </CardTitle>
         </CardHeader>
@@ -201,11 +224,11 @@ function ManagerDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Today's Hours</TableHead>
-                  {period === "week" && <TableHead>Week Total</TableHead>}
-                  <TableHead>Clock In</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide">Name</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide">Status</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide">Today's Hours</TableHead>
+                  {period === "week" && <TableHead className="text-xs font-semibold uppercase tracking-wide">Week Total</TableHead>}
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide">Clock In</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -213,17 +236,17 @@ function ManagerDashboard() {
                   <TableRow key={m.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{m.first_name} {m.last_name}</p>
+                        <p className="text-sm font-medium">{m.first_name} {m.last_name}</p>
                         <p className="text-xs text-muted-foreground">{m.email}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       {m.is_working ? (
-                        <Badge className="bg-success/15 text-success border-success/30">Working</Badge>
+                        <Badge className="bg-success/15 text-success border-success/30 font-medium text-[11px]">Working</Badge>
                       ) : m.today_session ? (
-                        <Badge variant="secondary">Done</Badge>
+                        <Badge variant="secondary" className="font-medium text-[11px]">Done</Badge>
                       ) : (
-                        <Badge variant="outline">Not started</Badge>
+                        <Badge variant="outline" className="font-medium text-[11px]">Not started</Badge>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm">{formatDuration(m.today_seconds)}</TableCell>
@@ -264,68 +287,84 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Admin Dashboard</h1>
+      <div>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Organization-wide overview and management</p>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all" onClick={() => navigate("/admin/users")}>
+        <Card
+          className="shadow-card cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
+          onClick={() => navigate("/admin/users")}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Users</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : stats.totalUsers}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : stats.totalUsers}</div>
             <p className="text-xs text-muted-foreground mt-1">{stats.activeUsers} active</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Working Now</CardTitle>
-            <Activity className="h-4 w-4 text-success" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Working Now</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{activeSessions.length}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{activeSessions.length}</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:ring-2 ring-primary/30 transition-all" onClick={() => navigate("/admin/teams")}>
+        <Card
+          className="shadow-card cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
+          onClick={() => navigate("/admin/teams")}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Teams</CardTitle>
-            <UsersRound className="h-4 w-4 text-info" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Teams</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center">
+              <UsersRound className="h-4 w-4 text-info" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : stats.totalTeams}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : stats.totalTeams}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pending Reviews</CardTitle>
+            <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{isLoading ? "…" : stats.pendingCorrections}</div>
+            <div className="text-2xl font-display font-bold tracking-tight">{isLoading ? "…" : stats.pendingCorrections}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Who is working now */}
       {activeSessions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5 text-success" />
+        <Card className="shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-display font-semibold flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
               Who's Working Now
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {activeSessions.map((s: { id: string; start_time: string; user: { first_name: string; last_name: string; email: string } | null }) => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div key={s.id} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
                   <div>
                     <p className="text-sm font-medium">
                       {s.user ? `${s.user.first_name} ${s.user.last_name}` : "Unknown"}
                     </p>
                     <p className="text-xs text-muted-foreground">{s.user?.email}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Since {new Date(s.start_time).toLocaleTimeString()}
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Since {new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               ))}
