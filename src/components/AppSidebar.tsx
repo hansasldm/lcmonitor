@@ -8,7 +8,7 @@ import {
   LogOut,
   LogIn,
   UsersRound,
-  Camera,
+  
   MessageSquare,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
