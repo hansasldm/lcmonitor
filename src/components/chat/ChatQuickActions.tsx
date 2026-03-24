@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, CalendarCheck, Camera, FileText } from "lucide-react";
+import { Users, CalendarCheck, FileText } from "lucide-react";
 
 export interface QuickAction {
   label: string;
