@@ -14,8 +14,6 @@ import TeamPage from "@/pages/TeamPage";
 import AdminPage from "@/pages/AdminPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
-
-
 import EmployeeDashboardPage from "@/pages/EmployeeDashboardPage";
 import ChatsPage from "@/pages/ChatsPage";
 import NotFound from "@/pages/NotFound";
@@ -46,8 +44,6 @@ const App = () => (
             <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
             <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
             <Route path="/admin/teams" element={<ProtectedPage><AdminTeamsPage /></ProtectedPage>} />
-            
-            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
