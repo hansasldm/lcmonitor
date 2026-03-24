@@ -8,8 +8,8 @@ import {
   LogOut,
   LogIn,
   UsersRound,
-  
   Camera,
+  MessageSquare,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
 import { NavLink } from "@/components/NavLink";
