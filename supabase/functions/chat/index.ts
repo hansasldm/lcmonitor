@@ -56,8 +56,10 @@ serve(async (req) => {
   const claims = await requireAuth(req, jwtSecret);
   if (!claims) return json({ error: "Unauthorized" }, 401);
 
-  const userId = claims.user_id as string;
+  const userId = (claims.user_id || claims.sub) as string;
   const userRole = claims.role as string;
+
+  if (!userId) return json({ error: "Invalid token: no user ID" }, 401);
 
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
