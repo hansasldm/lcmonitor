@@ -31,25 +31,25 @@ const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md border-border shadow-xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl">
-            <img src={companyLogo} alt="LC Logo" className="h-16 w-16 object-contain" />
+      <Card className="w-full max-w-md border-border shadow-premium">
+        <CardHeader className="text-center space-y-5 pb-2">
+          <div className="mx-auto flex items-center justify-center rounded-xl bg-muted/50 p-3">
+            <img src={companyLogo} alt="LC Monitor" className="h-14 w-auto object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">LC Monitor</CardTitle>
-            <CardDescription className="mt-1">Employee Time & Activity Tracking</CardDescription>
+            <CardTitle className="text-2xl font-display font-bold tracking-tight">LC Monitor</CardTitle>
+            <CardDescription className="mt-1 text-sm">Employee Time & Attendance Tracking</CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -57,10 +57,11 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
                 required
+                className="h-10"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -68,9 +69,10 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                className="h-10"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-10 font-medium" disabled={loading}>
               {loading ? "Signing in…" : "Sign in"}
             </Button>
           </form>
