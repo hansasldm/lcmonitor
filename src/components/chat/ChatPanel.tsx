@@ -25,7 +25,7 @@ function getMockResponse(input: string): string {
     return "Your Timesheet This Week:\n• Mon: 8h 12m\n• Tue: 7h 45m\n• Wed: 8h 30m\n• Thu: 8h 05m (today so far)\n\nTotal: 32h 32m — you're on track for a full 40-hour week.";
   }
 
-  return "I can help you with attendance tracking, timesheets, screenshots, and general app usage. Try one of the quick actions above, or ask me anything about LC Tracker!";
+  return "I can help you with attendance tracking, timesheets, and general app usage. Try one of the quick actions above, or ask me anything about LC Tracker!";
 }
 // ──────────────────────────────────────────────────────────────────
 
