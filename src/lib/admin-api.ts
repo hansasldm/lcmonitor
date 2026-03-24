@@ -42,4 +42,3 @@ export const adminApi = {
   removeTeamMember: (teamId: string, userId: string) =>
     request(`teams/${teamId}/members`, { method: "DELETE", body: JSON.stringify({ user_id: userId }) }),
 };
-};
