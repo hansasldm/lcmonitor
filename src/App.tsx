@@ -17,6 +17,7 @@ import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
 
 import AdminScreenshotsPage from "@/pages/admin/AdminScreenshotsPage";
 import EmployeeDashboardPage from "@/pages/EmployeeDashboardPage";
+import ChatsPage from "@/pages/ChatsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/employee" element={<ProtectedPage><EmployeeDashboardPage /></ProtectedPage>} />
             <Route path="/timesheet" element={<ProtectedPage><TimesheetPage /></ProtectedPage>} />
             <Route path="/attendance" element={<ProtectedPage><AttendancePage /></ProtectedPage>} />
+            <Route path="/chats" element={<ProtectedPage><ChatsPage /></ProtectedPage>} />
             <Route path="/team" element={<ProtectedPage><TeamPage /></ProtectedPage>} />
             <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
             <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
