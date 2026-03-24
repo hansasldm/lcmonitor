@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
+import companyIcon from "@/assets/company-icon.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
