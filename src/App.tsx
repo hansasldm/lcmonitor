@@ -15,7 +15,7 @@ import AdminPage from "@/pages/AdminPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminTeamsPage from "@/pages/admin/AdminTeamsPage";
 
-import AdminScreenshotsPage from "@/pages/admin/AdminScreenshotsPage";
+
 import EmployeeDashboardPage from "@/pages/EmployeeDashboardPage";
 import ChatsPage from "@/pages/ChatsPage";
 import NotFound from "@/pages/NotFound";
