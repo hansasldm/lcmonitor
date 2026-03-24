@@ -9,7 +9,7 @@ import {
   getStoredUser,
   isAuthenticated as checkAuth,
 } from "@/lib/auth";
-import { useHeartbeat } from "@/hooks/useHeartbeat";
+
 
 interface AuthContextType {
   user: AuthUser | null;
