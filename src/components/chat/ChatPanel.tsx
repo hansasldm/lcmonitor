@@ -13,8 +13,8 @@ function getMockResponse(input: string): string {
   const q = input.toLowerCase();
 
   if (q.includes("who is working") || q.includes("working now")) {
-    // TODO: Replace with live query to work_sessions / heartbeats table
-    return "Currently online employees:\n• Juan Dela Cruz — active since 8:02 AM\n• Maria Santos — active since 8:15 AM\n• Alex Reyes — active since 9:01 AM\n\n3 of 12 employees are currently tracked as active.";
+    // TODO: Replace with live query to work_sessions table (clock_out IS NULL)
+    return "Currently clocked-in employees:\n• Juan Dela Cruz — clocked in at 8:02 AM\n• Maria Santos — clocked in at 8:15 AM\n• Alex Reyes — clocked in at 9:01 AM\n\n3 of 12 employees are currently clocked in.";
   }
   if (q.includes("attendance") || q.includes("today's attendance")) {
     // TODO: Replace with live query to attendance table for today

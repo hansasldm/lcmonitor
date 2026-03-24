@@ -8,7 +8,7 @@ import {
   LogOut,
   LogIn,
   UsersRound,
-  Activity,
+  
   Camera,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
@@ -40,7 +40,7 @@ const adminItems = [
   { title: "Overview", url: "/admin", icon: Settings },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Teams", url: "/admin/teams", icon: UsersRound },
-  { title: "Events", url: "/admin/events", icon: Activity },
+  
   { title: "Screenshots", url: "/admin/screenshots", icon: Camera },
 ];
 
