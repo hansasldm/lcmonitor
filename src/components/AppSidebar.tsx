@@ -64,23 +64,19 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       {/* ── Logo / Brand ── */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <div className="shrink-0 flex items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm p-1.5">
+      <div className="flex items-center justify-center px-3 py-4 border-b border-sidebar-border">
+        {collapsed ? (
           <img
             src={companyIcon}
-            alt="LC Monitor icon"
-            className="h-11 w-11 object-contain"
+            alt="LC Monitor"
+            className="h-9 w-auto object-contain"
           />
-        </div>
-        {!collapsed && (
-          <div className="flex flex-col">
-            <span className="font-display text-[17px] font-bold tracking-tight text-sidebar-accent-foreground leading-tight">
-              LC Monitor
-            </span>
-            <span className="text-[10px] font-medium text-sidebar-muted tracking-wide uppercase">
-              Employee Tracking
-            </span>
-          </div>
+        ) : (
+          <img
+            src={companyIcon}
+            alt="LC Monitor"
+            className="h-12 w-auto object-contain"
+          />
         )}
       </div>
 
