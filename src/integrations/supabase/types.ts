@@ -112,6 +112,103 @@ export type Database = {
           },
         ]
       }
+      chat_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          group_type: Database["public"]["Enums"]["chat_group_type"]
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_type?: Database["public"]["Enums"]["chat_group_type"]
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_type?: Database["public"]["Enums"]["chat_group_type"]
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          created_at: string
+          edited_at: string | null
+          group_id: string
+          id: string
+          is_deleted: boolean
+          message_text: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          edited_at?: string | null
+          group_id: string
+          id?: string
+          is_deleted?: boolean
+          message_text: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          edited_at?: string | null
+          group_id?: string
+          id?: string
+          is_deleted?: boolean
+          message_text?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           device_id: string
@@ -396,6 +493,8 @@ export type Database = {
     }
     Enums: {
       attendance_status: "PRESENT" | "ABSENT" | "LEAVE" | "HOLIDAY"
+      chat_group_type: "GENERAL" | "TEAM" | "PROJECT"
+      chat_member_role: "ADMIN" | "MEMBER"
       correction_status: "PENDING" | "APPROVED" | "REJECTED"
       event_type:
         | "LOGIN"
@@ -537,6 +636,8 @@ export const Constants = {
   public: {
     Enums: {
       attendance_status: ["PRESENT", "ABSENT", "LEAVE", "HOLIDAY"],
+      chat_group_type: ["GENERAL", "TEAM", "PROJECT"],
+      chat_member_role: ["ADMIN", "MEMBER"],
       correction_status: ["PENDING", "APPROVED", "REJECTED"],
       event_type: [
         "LOGIN",
