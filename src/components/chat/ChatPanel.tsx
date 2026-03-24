@@ -108,7 +108,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
             <Bot className="h-4.5 w-4.5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold leading-tight">LC Assistant</h3>
+            <h3 className="text-sm font-semibold leading-tight">StaffSync Assistant</h3>
             <p className="text-[11px] opacity-80 leading-tight">
               Ask about attendance, timesheets & more
             </p>

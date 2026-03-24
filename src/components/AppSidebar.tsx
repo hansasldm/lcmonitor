@@ -67,7 +67,7 @@ export function AppSidebar() {
         <img src={companyLogo} alt="LC Logo" className="h-7 w-7 shrink-0 object-contain" />
         {!collapsed && (
           <span className="font-display text-lg font-bold text-sidebar-foreground">
-            LC Tracker
+            StaffSync
           </span>
         )}
       </div>
