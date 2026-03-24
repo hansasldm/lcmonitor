@@ -37,7 +37,7 @@ const LoginPage = () => {
             <img src={companyLogo} alt="LC Logo" className="h-16 w-16 object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">StaffPulse</CardTitle>
+            <CardTitle className="text-2xl font-display">LC Monitor</CardTitle>
             <CardDescription className="mt-1">Employee Time & Activity Tracking</CardDescription>
           </div>
         </CardHeader>
