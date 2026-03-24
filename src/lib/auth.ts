@@ -2,7 +2,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1/auth`;
 
-// Standard Supabase-compatible storage key so desktop agents can find the session
+// Storage key for auth session
 const SB_AUTH_KEY = `sb-${SUPABASE_PROJECT_ID}-auth-token`;
 
 export interface AuthUser {

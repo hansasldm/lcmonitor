@@ -18,7 +18,7 @@ async function request(path: string, options?: RequestInit) {
 
 export const adminApi = {
   getStats: () => request("stats"),
-  getEvents: () => request("events"),
+  
   getUsers: () => request("users"),
   createUser: (body: {
     email: string;
