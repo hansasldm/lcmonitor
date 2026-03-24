@@ -20,9 +20,6 @@ function getMockResponse(input: string): string {
     // TODO: Replace with live query to attendance table for today
     return "Today's Attendance Summary:\n• Present: 10\n• Absent: 1\n• On Leave: 1\n• Total: 12\n\nAll present employees clocked in before 9:00 AM.";
   }
-  if (q.includes("screenshot")) {
-    return "You can view employee screenshots on the Screenshots page. Navigate there from the sidebar under Admin → Screenshots, or I can take you there now.\n\nScreenshots are captured automatically and stored securely with signed URLs.";
-  }
   if (q.includes("timesheet") || q.includes("explain")) {
     // TODO: Replace with live query to work_sessions for current user
     return "Your Timesheet This Week:\n• Mon: 8h 12m\n• Tue: 7h 45m\n• Wed: 8h 30m\n• Thu: 8h 05m (today so far)\n\nTotal: 32h 32m — you're on track for a full 40-hour week.";
