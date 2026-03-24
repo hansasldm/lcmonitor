@@ -185,68 +185,6 @@ serve(async (req) => {
       return json({ success: true, message: "Sample ACTIVITY event inserted", timestamp: now });
     }
 
-    // POST /agent/heartbeat
-    if (action === "heartbeat" && req.method === "POST") {
-      const body = await req.json().catch(() => ({}));
-      const deviceIdRaw = validateDeviceId(body.device_id);
-      const osType = validateOsType(body.os_type);
-      const now = new Date();
-      const nowISO = now.toISOString();
-      const todayDate = nowISO.slice(0, 10);
-
-      const dbDeviceId = await ensureDevice(supabase, userId, deviceIdRaw, osType);
-
-      await supabase.from("heartbeats").insert({
-        user_id: userId,
-        device_id: dbDeviceId,
-        timestamp: nowISO,
-        last_seen: nowISO,
-      });
-
-      const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-      const { data: staleSessions } = await supabase
-        .from("work_sessions")
-        .select("id, updated_at")
-        .eq("user_id", userId)
-        .is("end_time", null)
-        .lt("updated_at", fiveMinAgo);
-
-      if (staleSessions && staleSessions.length > 0) {
-        for (const s of staleSessions) {
-          await supabase
-            .from("work_sessions")
-            .update({ end_time: s.updated_at, updated_at: nowISO })
-            .eq("id", s.id);
-        }
-      }
-
-      const { data: activeSession } = await supabase
-        .from("work_sessions")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("date", todayDate)
-        .is("end_time", null)
-        .maybeSingle();
-
-      if (activeSession) {
-        await supabase
-          .from("work_sessions")
-          .update({ updated_at: nowISO })
-          .eq("id", activeSession.id);
-      } else {
-        await supabase.from("work_sessions").insert({
-          user_id: userId,
-          date: todayDate,
-          start_time: nowISO,
-          source: "AUTO",
-          total_active_seconds: 0,
-          total_idle_seconds: 0,
-        });
-      }
-
-      return json({ success: true });
-    }
-
     // POST /agent/debug/make-admin (disabled)
     if (action === "make-admin" && req.method === "POST") {
       return json({ error: "This debug endpoint is disabled" }, 403);
