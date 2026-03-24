@@ -41,10 +41,4 @@ export const adminApi = {
     request(`teams/${teamId}/members`, { method: "POST", body: JSON.stringify({ user_ids: userIds }) }),
   removeTeamMember: (teamId: string, userId: string) =>
     request(`teams/${teamId}/members`, { method: "DELETE", body: JSON.stringify({ user_id: userId }) }),
-  getScreenshots: (params: { user_id?: string; date?: string }) => {
-    const qs = new URLSearchParams();
-    if (params.user_id) qs.set("user_id", params.user_id);
-    if (params.date) qs.set("date", params.date);
-    return request(`screenshots?${qs.toString()}`);
-  },
 };

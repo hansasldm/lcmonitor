@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, CalendarCheck, Camera, FileText } from "lucide-react";
+import { Users, CalendarCheck, FileText } from "lucide-react";
 
 export interface QuickAction {
   label: string;
@@ -19,12 +19,6 @@ const defaultQuickActions: QuickAction[] = [
     label: "Show today's attendance",
     icon: <CalendarCheck className="h-3.5 w-3.5" />,
     message: "Show today's attendance",
-  },
-  {
-    label: "Open screenshots page",
-    icon: <Camera className="h-3.5 w-3.5" />,
-    message: "Open screenshots page",
-    navigateTo: "/admin/screenshots",
   },
   {
     label: "Explain my timesheet",

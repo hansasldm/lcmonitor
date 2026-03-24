@@ -8,7 +8,7 @@ import {
   LogOut,
   LogIn,
   UsersRound,
-  Camera,
+  
   MessageSquare,
 } from "lucide-react";
 import companyLogo from "@/assets/company-logo.png";
@@ -41,8 +41,6 @@ const adminItems = [
   { title: "Overview", url: "/admin", icon: Settings },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Teams", url: "/admin/teams", icon: UsersRound },
-  
-  { title: "Screenshots", url: "/admin/screenshots", icon: Camera },
 ];
 
 export function AppSidebar() {
