@@ -34,7 +34,7 @@ const LoginPage = () => {
       <Card className="w-full max-w-md border-border shadow-premium">
         <CardHeader className="text-center space-y-5 pb-2">
           <div className="mx-auto flex items-center justify-center rounded-xl bg-muted/50 p-3">
-            <img src={companyLogo} alt="LC Monitor" className="h-14 w-auto object-contain" />
+            <img src={companyLogo} alt="LC Monitor" className="h-20 w-auto object-contain" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display font-bold tracking-tight">LC Monitor</CardTitle>
