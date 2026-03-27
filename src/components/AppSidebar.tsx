@@ -69,7 +69,7 @@ export function AppSidebar() {
           <img
             src={companyIcon}
             alt="LC Monitor"
-            className="h-9 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         ) : (
           <img
