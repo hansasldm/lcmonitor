@@ -27,6 +27,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
   const [callType, setCallType] = useState<"audio" | "video">("audio");
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [remoteUserName, setRemoteUserName] = useState("");
   const [callDuration, setCallDuration] = useState(0);
 
