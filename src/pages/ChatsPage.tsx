@@ -273,7 +273,7 @@ export default function ChatsPage() {
         />
 
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
+        <div className="flex items-center gap-3 p-4 border-b border-border/50 header-glass">
           <Button variant="ghost" size="icon" onClick={() => { setSelectedGroup(null); setMessages([]); }}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
