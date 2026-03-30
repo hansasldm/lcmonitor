@@ -343,6 +343,51 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     }
   }, []);
 
+  // Toggle screen sharing
+  const toggleScreenShare = useCallback(async () => {
+    if (!peerConnection.current) return;
+
+    if (isScreenSharing) {
+      // Stop screen share → revert to camera
+      screenStream.current?.getTracks().forEach((t) => t.stop());
+      screenStream.current = null;
+      const camTrack = localStream.current?.getVideoTracks()[0];
+      if (camTrack && senderRef.current) {
+        await senderRef.current.replaceTrack(camTrack);
+      }
+      setIsScreenSharing(false);
+    } else {
+      try {
+        const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        screenStream.current = screen;
+        const screenTrack = screen.getVideoTracks()[0];
+
+        // Find the video sender and replace track
+        const sender = peerConnection.current
+          .getSenders()
+          .find((s) => s.track?.kind === "video");
+        if (sender) {
+          senderRef.current = sender;
+          await sender.replaceTrack(screenTrack);
+        }
+
+        // When user stops sharing via browser UI
+        screenTrack.onended = () => {
+          const camTrack = localStream.current?.getVideoTracks()[0];
+          if (camTrack && senderRef.current) {
+            senderRef.current.replaceTrack(camTrack);
+          }
+          screenStream.current = null;
+          setIsScreenSharing(false);
+        };
+
+        setIsScreenSharing(true);
+      } catch (err) {
+        console.warn("Screen share cancelled or failed:", err);
+      }
+    }
+  }, [isScreenSharing]);
+
   // Listen for incoming calls on subscribed groups
   const listenForCalls = useCallback(
     (groupIds: string[]) => {
