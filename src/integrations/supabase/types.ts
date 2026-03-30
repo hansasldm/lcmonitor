@@ -112,6 +112,54 @@ export type Database = {
           },
         ]
       }
+      breaks: {
+        Row: {
+          break_end: string | null
+          break_start: string
+          created_at: string
+          date: string
+          duration_seconds: number
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          break_end?: string | null
+          break_start: string
+          created_at?: string
+          date: string
+          duration_seconds?: number
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string
+          created_at?: string
+          date?: string
+          duration_seconds?: number
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breaks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "work_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_group_members: {
         Row: {
           group_id: string
