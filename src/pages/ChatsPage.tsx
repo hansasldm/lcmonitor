@@ -483,8 +483,12 @@ export default function ChatsPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-primary" />
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/20" : "bg-primary/10"}`}>
+                    {group.group_type === "DIRECT" ? (
+                      <User className="h-5 w-5 text-accent-foreground" />
+                    ) : (
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-medium text-foreground">{group.name}</h3>
@@ -493,7 +497,9 @@ export default function ChatsPage() {
                     )}
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-xs">{group.group_type}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {group.group_type === "DIRECT" ? "Direct" : group.group_type}
+                </Badge>
               </div>
             </Card>
           ))}
