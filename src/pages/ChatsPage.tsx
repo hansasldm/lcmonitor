@@ -495,6 +495,47 @@ export default function ChatsPage() {
         </div>
       </div>
 
+      {/* Search bar */}
+      {showSearch && (
+        <div className="mb-4">
+          <Input
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            autoFocus
+            className="mb-2"
+          />
+          {searching && <p className="text-xs text-muted-foreground">Searching...</p>}
+          {searchResults.length > 0 && (
+            <Card className="divide-y divide-border max-h-80 overflow-auto">
+              {searchResults.map((r) => (
+                <div
+                  key={r.id}
+                  className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSearchResultClick(r)}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-primary">
+                      {r.group?.name || "Unknown group"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(r.created_at), "MMM d, h:mm a")}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground line-clamp-2">{r.message_text}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {r.sender ? `${r.sender.first_name} ${r.sender.last_name}` : "Unknown"}
+                  </p>
+                </div>
+              ))}
+            </Card>
+          )}
+          {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">No messages found</p>
+          )}
+        </div>
+      )}
+
       {groups.length === 0 ? (
         <Card className="p-12 text-center">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
