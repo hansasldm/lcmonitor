@@ -537,9 +537,9 @@ export default function ChatsPage() {
       )}
 
       {groups.length === 0 ? (
-        <Card className="p-12 text-center">
+        <Card className="card-premium p-12 text-center">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-foreground mb-1">No chats yet</h3>
+          <h3 className="font-display font-semibold text-foreground mb-1">No chats yet</h3>
           <p className="text-sm text-muted-foreground">
             Start a direct chat or {isAdmin ? "create a group" : "ask an admin to add you to a group"}.
           </p>
