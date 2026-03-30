@@ -15,6 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, Send, Plus, Users, ArrowLeft, UserPlus, UserMinus, Phone, Video } from "lucide-react";
 import { format } from "date-fns";
 import { adminApi } from "@/lib/admin-api";
+import { useWebRTC } from "@/hooks/useWebRTC";
+import { CallScreen } from "@/components/chat/CallScreen";
+import { IncomingCallDialog } from "@/components/chat/IncomingCallDialog";
 
 export default function ChatsPage() {
   const { user } = useAuth();
