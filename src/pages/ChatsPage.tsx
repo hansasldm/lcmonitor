@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Send, Plus, Users, ArrowLeft, UserPlus, UserMinus } from "lucide-react";
+import { MessageSquare, Send, Plus, Users, ArrowLeft, UserPlus, UserMinus, Phone, Video } from "lucide-react";
 import { format } from "date-fns";
 import { adminApi } from "@/lib/admin-api";
 
