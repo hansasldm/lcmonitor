@@ -12,7 +12,7 @@ import {
   ChevronRight,
   ClipboardList,
 } from "lucide-react";
-import companyIcon from "@/assets/company-icon.png";
+import companyLogo from "@/assets/lemoncode-logo.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -66,11 +66,11 @@ export function AppSidebar() {
       {/* Brand */}
       <div className="flex items-center justify-center px-3 py-5 border-b border-sidebar-border/60">
         {collapsed ? (
-          <img src={companyIcon} alt="LC" className="h-9 w-auto object-contain" />
+          <img src={companyLogo} alt="LC" className="h-10 w-auto object-contain" />
         ) : (
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center p-1.5">
-              <img src={companyIcon} alt="LC" className="h-full w-auto object-contain" />
+            <div className="h-12 w-12 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center p-1">
+              <img src={companyLogo} alt="LC" className="h-full w-auto object-contain" />
             </div>
             <div>
               <span className="text-[15px] font-display font-bold text-white tracking-tight leading-none">
