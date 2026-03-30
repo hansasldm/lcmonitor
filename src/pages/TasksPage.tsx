@@ -81,7 +81,7 @@ function TaskCard({
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select
                     value={task.status}
-                    onValueChange={(v) => onUpdate({ id: task.id, status: v })}
+                    onValueChange={(v) => onUpdate({ id: task.id, status: v as Task["status"] })}
                   >
                     <SelectTrigger className="h-7 text-[11px] w-auto min-w-[100px]">
                       <SelectValue />
