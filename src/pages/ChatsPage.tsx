@@ -419,11 +419,11 @@ export default function ChatsPage() {
 
   // Group list view
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-6 max-w-2xl mx-auto animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Chats</h1>
-          <p className="text-muted-foreground text-sm">Group & direct conversations</p>
+          <h1 className="page-heading">Chats</h1>
+          <p className="page-subheading">Group & direct conversations</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => { setShowSearch(!showSearch); setSearchQuery(""); setSearchResults([]); }}>
