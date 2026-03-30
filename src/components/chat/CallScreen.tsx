@@ -7,6 +7,8 @@ import {
   Video,
   VideoOff,
   User,
+  Monitor,
+  MonitorOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CallState } from "@/hooks/useWebRTC";
@@ -18,11 +20,13 @@ interface CallScreenProps {
   callDuration: number;
   isMuted: boolean;
   isVideoOff: boolean;
+  isScreenSharing: boolean;
   localVideoRef: RefObject<HTMLVideoElement>;
   remoteVideoRef: RefObject<HTMLVideoElement>;
   onEndCall: () => void;
   onToggleMute: () => void;
   onToggleVideo: () => void;
+  onToggleScreenShare: () => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -38,11 +42,13 @@ export function CallScreen({
   callDuration,
   isMuted,
   isVideoOff,
+  isScreenSharing,
   localVideoRef,
   remoteVideoRef,
   onEndCall,
   onToggleMute,
   onToggleVideo,
+  onToggleScreenShare,
 }: CallScreenProps) {
   const isVideo = callType === "video";
   const statusText =
@@ -112,6 +118,14 @@ export function CallScreen({
         </div>
       )}
 
+      {/* Screen sharing indicator */}
+      {isScreenSharing && (
+        <div className="absolute top-6 left-6 z-10 bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+          <Monitor className="h-3.5 w-3.5" />
+          Sharing screen
+        </div>
+      )}
+
       {/* Call controls */}
       <div className="absolute bottom-10 left-0 right-0 flex items-center justify-center gap-4 z-10">
         <Button
@@ -137,6 +151,20 @@ export function CallScreen({
             )}
           </Button>
         )}
+
+        <Button
+          onClick={onToggleScreenShare}
+          variant={isScreenSharing ? "default" : "secondary"}
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg"
+          title={isScreenSharing ? "Stop sharing" : "Share screen"}
+        >
+          {isScreenSharing ? (
+            <MonitorOff className="h-6 w-6" />
+          ) : (
+            <Monitor className="h-6 w-6" />
+          )}
+        </Button>
 
         <Button
           onClick={onEndCall}
