@@ -7,50 +7,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Clock, Users, CalendarCheck, AlertTriangle, Activity, Timer, UsersRound, Coffee } from "lucide-react";
+import { Clock, Users, CalendarCheck, AlertTriangle, Activity, Timer, UsersRound, Coffee, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function StatCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  iconColor = "text-primary",
-  iconBg = "bg-primary/8",
-  clickable,
-  onClick,
+  title, value, subtitle, icon: Icon,
+  iconColor = "text-primary", iconBg = "bg-primary/8",
+  clickable, onClick,
 }: {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  icon: React.ElementType;
-  iconColor?: string;
-  iconBg?: string;
-  clickable?: boolean;
-  onClick?: () => void;
+  title: string; value: string | number; subtitle?: string;
+  icon: React.ElementType; iconColor?: string; iconBg?: string;
+  clickable?: boolean; onClick?: () => void;
 }) {
   return (
     <Card
-      className={`card-premium ${clickable ? "cursor-pointer" : ""}`}
+      className={`card-premium ${clickable ? "card-interactive" : ""}`}
       onClick={onClick}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+        <CardTitle className="section-label">{title}</CardTitle>
+        <div className={`stat-icon ${iconBg}`}>
           <Icon className={`h-[18px] w-[18px] ${iconColor}`} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-[26px] font-display font-bold tracking-tight leading-none">
+        <div className="text-[28px] font-display font-extrabold tracking-tight leading-none tabular-nums">
           {value}
         </div>
         {subtitle && (
@@ -65,32 +48,13 @@ function EmployeeDashboard() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-display font-bold tracking-tight">Good morning!</h1>
-        <p className="text-sm text-muted-foreground mt-1">Here's your workday overview</p>
+        <h1 className="page-heading">Good morning!</h1>
+        <p className="page-subheading">Here's your workday overview</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Today's Status"
-          value="Not Clocked In"
-          subtitle="Clock in to start tracking"
-          icon={Clock}
-        />
-        <StatCard
-          title="Hours Today"
-          value="0h 0m"
-          subtitle="Active time"
-          icon={Timer}
-          iconColor="text-accent"
-          iconBg="bg-accent/8"
-        />
-        <StatCard
-          title="This Week"
-          value="0h 0m"
-          subtitle="of 40h target"
-          icon={Activity}
-          iconColor="text-info"
-          iconBg="bg-info/8"
-        />
+        <StatCard title="Today's Status" value="Not Clocked In" subtitle="Clock in to start tracking" icon={Clock} />
+        <StatCard title="Hours Today" value="0h 0m" subtitle="Active time" icon={Timer} iconColor="text-accent" iconBg="bg-accent/8" />
+        <StatCard title="This Week" value="0h 0m" subtitle="of 40h target" icon={TrendingUp} iconColor="text-info" iconBg="bg-info/8" />
       </div>
     </div>
   );
@@ -103,21 +67,14 @@ function formatDuration(totalSeconds: number): string {
 }
 
 interface TeamMember {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  is_working: boolean;
-  today_seconds: number;
-  period_seconds: number;
-  session_count: number;
+  id: string; first_name: string; last_name: string; email: string;
+  role: string; is_working: boolean; today_seconds: number;
+  period_seconds: number; session_count: number;
   today_session: { start_time: string; end_time: string | null } | null;
 }
 
 function ManagerDashboard() {
   const [period, setPeriod] = useState<"today" | "week">("today");
-
   const { data, isLoading } = useQuery({
     queryKey: ["team-overview", period],
     queryFn: () => workSessionsApi.getTeamOverview(period),
@@ -135,21 +92,16 @@ function ManagerDashboard() {
   if (!isLoading && !hasTeam) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <h1 className="text-2xl font-display font-bold tracking-tight">Team Overview</h1>
+        <h1 className="page-heading">Team Overview</h1>
         <Card className="card-premium">
-          <CardContent className="py-12 text-center space-y-4">
-            <div className="h-14 w-14 mx-auto rounded-2xl bg-muted flex items-center justify-center">
+          <CardContent className="py-16 text-center space-y-4">
+            <div className="h-14 w-14 mx-auto rounded-2xl bg-muted/80 flex items-center justify-center">
               <Users className="h-7 w-7 text-muted-foreground" />
             </div>
             <div>
               <p className="text-lg font-display font-semibold">No Team Assigned</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {data?.message || "You haven't been assigned to a team yet."}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{data?.message || "You haven't been assigned to a team yet."}</p>
             </div>
-            <Button variant="outline" size="sm">
-              Request Admin to Assign Team
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -160,83 +112,72 @@ function ManagerDashboard() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold tracking-tight">Team Overview</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor your team's attendance and activity</p>
+          <h1 className="page-heading">Team Overview</h1>
+          <p className="page-subheading">Monitor your team's attendance and activity</p>
         </div>
-        <div className="flex gap-1 bg-muted/60 p-1 rounded-xl border border-border/40">
-          <Button
-            variant={period === "today" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setPeriod("today")}
-            className="h-7 text-xs px-3 rounded-lg"
-          >
-            Today
-          </Button>
-          <Button
-            variant={period === "week" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setPeriod("week")}
-            className="h-7 text-xs px-3 rounded-lg"
-          >
-            This Week
-          </Button>
+        <div className="flex gap-0.5 bg-muted/60 p-1 rounded-xl border border-border/40">
+          {(["today", "week"] as const).map((p) => (
+            <Button
+              key={p}
+              variant={period === p ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setPeriod(p)}
+              className="h-7 text-xs px-3.5 rounded-lg"
+            >
+              {p === "today" ? "Today" : "This Week"}
+            </Button>
+          ))}
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Team Members" value={isLoading ? "…" : totalMembers} icon={Users} />
         <StatCard
-          title="Working Now"
-          value={isLoading ? "…" : workingNow.length}
+          title="Working Now" value={isLoading ? "…" : workingNow.length}
           subtitle={totalMembers > 0 ? `${Math.round((workingNow.length / totalMembers) * 100)}% of team` : ""}
-          icon={Activity}
-          iconColor="text-success"
-          iconBg="bg-success/8"
+          icon={Activity} iconColor="text-success" iconBg="bg-success/8"
         />
         <StatCard
           title={`Avg Hours ${period === "today" ? "Today" : "This Week"}`}
           value={isLoading ? "…" : formatDuration(avgSeconds)}
-          icon={Clock}
-          iconColor="text-info"
-          iconBg="bg-info/8"
+          icon={Clock} iconColor="text-info" iconBg="bg-info/8"
         />
         <StatCard
-          title="Sessions"
-          value={isLoading ? "…" : members.reduce((sum, m) => sum + m.session_count, 0)}
+          title="Sessions" value={isLoading ? "…" : members.reduce((sum, m) => sum + m.session_count, 0)}
           subtitle={period === "today" ? "today" : "this week"}
           icon={CalendarCheck}
         />
       </div>
 
-      <Card className="card-premium">
+      <Card className="card-premium overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-display font-semibold flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             Team Members
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground p-6">Loading…</p>
           ) : members.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No team members assigned yet.</p>
+            <p className="text-sm text-muted-foreground p-6">No team members assigned yet.</p>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-[0.1em]">Name</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-[0.1em]">Status</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-[0.1em]">Today's Hours</TableHead>
-                  {period === "week" && <TableHead className="text-[11px] font-semibold uppercase tracking-[0.1em]">Week Total</TableHead>}
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-[0.1em]">Clock In</TableHead>
+                <TableRow className="hover:bg-transparent border-border/40">
+                  <TableHead className="section-label pl-6">Name</TableHead>
+                  <TableHead className="section-label">Status</TableHead>
+                  <TableHead className="section-label">Today's Hours</TableHead>
+                  {period === "week" && <TableHead className="section-label">Week Total</TableHead>}
+                  <TableHead className="section-label pr-6">Clock In</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {members.map((m) => (
-                  <TableRow key={m.id} className="border-border/40">
-                    <TableCell>
+                  <TableRow key={m.id} className="border-border/30 hover:bg-muted/30">
+                    <TableCell className="pl-6">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-7 w-7 rounded-lg bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                        <div className="h-8 w-8 rounded-lg bg-primary/6 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
                           {m.first_name[0]}{m.last_name[0]}
                         </div>
                         <div>
@@ -251,14 +192,14 @@ function ManagerDashboard() {
                       ) : m.today_session ? (
                         <Badge variant="secondary" className="font-medium text-[11px]">Done</Badge>
                       ) : (
-                        <Badge variant="outline" className="font-medium text-[11px] border-border/60">Not started</Badge>
+                        <Badge variant="outline" className="font-medium text-[11px] border-border/50">Not started</Badge>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-sm tabular-nums">{formatDuration(m.today_seconds)}</TableCell>
                     {period === "week" && (
                       <TableCell className="font-mono text-sm tabular-nums">{formatDuration(m.period_seconds)}</TableCell>
                     )}
-                    <TableCell className="text-xs text-muted-foreground tabular-nums">
+                    <TableCell className="text-xs text-muted-foreground tabular-nums pr-6">
                       {m.today_session
                         ? new Date(m.today_session.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                         : "—"}
@@ -276,15 +217,9 @@ function ManagerDashboard() {
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-stats"],
-    queryFn: adminApi.getStats,
-  });
-
+  const { data, isLoading } = useQuery({ queryKey: ["admin-stats"], queryFn: adminApi.getStats });
   const { data: activeData } = useQuery({
-    queryKey: ["active-now"],
-    queryFn: workSessionsApi.getActiveNow,
-    refetchInterval: 30000,
+    queryKey: ["active-now"], queryFn: workSessionsApi.getActiveNow, refetchInterval: 30000,
   });
 
   const stats = data ?? { totalUsers: 0, activeUsers: 0, totalTeams: 0, pendingCorrections: 0 };
@@ -293,57 +228,31 @@ function AdminDashboard() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-display font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Organization-wide overview and management</p>
+        <h1 className="page-heading">Admin Dashboard</h1>
+        <p className="page-subheading">Organization-wide overview and management</p>
       </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Users"
-          value={isLoading ? "…" : stats.totalUsers}
-          subtitle={`${stats.activeUsers} active`}
-          icon={Users}
-          clickable
-          onClick={() => navigate("/admin/users")}
-        />
-        <StatCard
-          title="Working Now"
-          value={activeSessions.length}
-          icon={Activity}
-          iconColor="text-success"
-          iconBg="bg-success/8"
-        />
-        <StatCard
-          title="Teams"
-          value={isLoading ? "…" : stats.totalTeams}
-          icon={UsersRound}
-          iconColor="text-info"
-          iconBg="bg-info/8"
-          clickable
-          onClick={() => navigate("/admin/teams")}
-        />
-        <StatCard
-          title="Pending Reviews"
-          value={isLoading ? "…" : stats.pendingCorrections}
-          icon={AlertTriangle}
-          iconColor="text-warning"
-          iconBg="bg-warning/8"
-        />
+        <StatCard title="Total Users" value={isLoading ? "…" : stats.totalUsers} subtitle={`${stats.activeUsers} active`} icon={Users} clickable onClick={() => navigate("/admin/users")} />
+        <StatCard title="Working Now" value={activeSessions.length} icon={Activity} iconColor="text-success" iconBg="bg-success/8" />
+        <StatCard title="Teams" value={isLoading ? "…" : stats.totalTeams} icon={UsersRound} iconColor="text-info" iconBg="bg-info/8" clickable onClick={() => navigate("/admin/teams")} />
+        <StatCard title="Pending Reviews" value={isLoading ? "…" : stats.pendingCorrections} icon={AlertTriangle} iconColor="text-warning" iconBg="bg-warning/8" />
       </div>
 
       {activeSessions.length > 0 && (
-        <Card className="card-premium">
+        <Card className="card-premium overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-display font-semibold flex items-center gap-2.5">
-              <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+              <span className="dot-live" />
               Who's Working Now
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-0">
+          <CardContent className="p-0">
+            <div className="divide-y divide-border/30">
               {activeSessions.map((s: { id: string; start_time: string; on_break?: boolean; user: { first_name: string; last_name: string; email: string } | null }) => (
-                <div key={s.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${s.on_break ? "bg-warning/8 text-warning" : "bg-success/8 text-success"}`}>
+                <div key={s.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${s.on_break ? "bg-warning/8 text-warning" : "bg-success/8 text-success"}`}>
                       {s.user ? `${s.user.first_name[0]}${s.user.last_name[0]}` : "?"}
                     </div>
                     <div>
@@ -375,12 +284,9 @@ const Dashboard = () => {
   const { user } = useAuth();
   if (!user) return null;
   switch (user.role) {
-    case "ADMIN":
-      return <AdminDashboard />;
-    case "MANAGER":
-      return <ManagerDashboard />;
-    default:
-      return <EmployeeDashboard />;
+    case "ADMIN": return <AdminDashboard />;
+    case "MANAGER": return <ManagerDashboard />;
+    default: return <EmployeeDashboard />;
   }
 };
 

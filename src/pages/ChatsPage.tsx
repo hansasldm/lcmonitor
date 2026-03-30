@@ -273,7 +273,7 @@ export default function ChatsPage() {
         />
 
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
+        <div className="flex items-center gap-3 p-4 border-b border-border/50 header-glass">
           <Button variant="ghost" size="icon" onClick={() => { setSelectedGroup(null); setMessages([]); }}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -323,7 +323,7 @@ export default function ChatsPage() {
                     const isMe = msg.sender_id === user?.id;
                     return (
                       <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"}`}>
+                        <div className={`max-w-[75%] px-4 py-2.5 ${isMe ? "chat-bubble-self" : "chat-bubble-other"}`}>
                           {!isMe && (
                             <div className="text-xs font-medium mb-1 opacity-70">
                               {msg.sender ? `${msg.sender.first_name} ${msg.sender.last_name}` : "Unknown"}
@@ -343,7 +343,7 @@ export default function ChatsPage() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t border-border bg-card">
+            <div className="p-4 border-t border-border/50 header-glass">
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                 className="flex gap-2"
@@ -419,11 +419,11 @@ export default function ChatsPage() {
 
   // Group list view
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-6 max-w-2xl mx-auto animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Chats</h1>
-          <p className="text-muted-foreground text-sm">Group & direct conversations</p>
+          <h1 className="page-heading">Chats</h1>
+          <p className="page-subheading">Group & direct conversations</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => { setShowSearch(!showSearch); setSearchQuery(""); setSearchResults([]); }}>
@@ -537,9 +537,9 @@ export default function ChatsPage() {
       )}
 
       {groups.length === 0 ? (
-        <Card className="p-12 text-center">
+        <Card className="card-premium p-12 text-center">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-foreground mb-1">No chats yet</h3>
+          <h3 className="font-display font-semibold text-foreground mb-1">No chats yet</h3>
           <p className="text-sm text-muted-foreground">
             Start a direct chat or {isAdmin ? "create a group" : "ask an admin to add you to a group"}.
           </p>
@@ -549,12 +549,12 @@ export default function ChatsPage() {
           {groups.map((group) => (
             <Card
               key={group.id}
-              className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="card-premium p-4 cursor-pointer hover:bg-muted/20"
               onClick={() => setSelectedGroup(group)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/20" : "bg-primary/10"}`}>
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/10" : "bg-primary/8"}`}>
                     {group.group_type === "DIRECT" ? (
                       <User className="h-5 w-5 text-accent-foreground" />
                     ) : (

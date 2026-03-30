@@ -22,7 +22,7 @@ const TimesheetPage = () => {
     mutationFn: workSessionsApi.clockIn,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["work-session-status"] });
-      toast({ title: "✅ Clocked In", description: "Your work session has started. Have a productive day!" });
+      toast({ title: "✅ Clocked In", description: "Your work session has started." });
     },
     onError: (e: Error) => toast({ title: "Clock In Failed", description: e.message, variant: "destructive" }),
   });
@@ -40,12 +40,15 @@ const TimesheetPage = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-display font-bold">My Timesheet</h1>
+        <div>
+          <h1 className="page-heading">My Timesheet</h1>
+          <p className="page-subheading">Track and manage your work sessions</p>
+        </div>
         <div className="flex gap-2">
           <Button
-            className="gap-2"
+            className="gap-2 rounded-xl h-10"
             onClick={() => clockInMut.mutate()}
             disabled={isWorking || !!sessionDone || clockInMut.isPending || isLoading}
           >
@@ -54,7 +57,7 @@ const TimesheetPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="gap-2"
+            className="gap-2 rounded-xl h-10"
             onClick={() => clockOutMut.mutate()}
             disabled={!isWorking || clockOutMut.isPending}
           >
@@ -64,10 +67,10 @@ const TimesheetPage = () => {
         </div>
       </div>
 
-      <Card>
+      <Card className="card-premium">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
+          <CardTitle className="text-sm font-display font-semibold flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
             Today's Sessions
           </CardTitle>
         </CardHeader>
@@ -77,21 +80,22 @@ const TimesheetPage = () => {
           ) : !session ? (
             <p className="text-sm text-muted-foreground">No sessions recorded today. Clock in to start tracking your time.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Started</span>
-                <span className="font-medium">{new Date(session.start_time).toLocaleTimeString()}</span>
+                <span className="font-medium font-mono tabular-nums">{new Date(session.start_time).toLocaleTimeString()}</span>
               </div>
               {session.end_time && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Ended</span>
-                  <span className="font-medium">{new Date(session.end_time).toLocaleTimeString()}</span>
+                  <span className="font-medium font-mono tabular-nums">{new Date(session.end_time).toLocaleTimeString()}</span>
                 </div>
               )}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Status</span>
-                <span className={`font-medium ${isWorking ? "text-success" : "text-muted-foreground"}`}>
-                  {isWorking ? "● Working" : "Completed"}
+                <span className={`font-medium flex items-center gap-1.5 ${isWorking ? "text-success" : "text-muted-foreground"}`}>
+                  {isWorking && <span className="dot-live" />}
+                  {isWorking ? "Working" : "Completed"}
                 </span>
               </div>
             </div>

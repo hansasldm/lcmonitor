@@ -27,7 +27,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
@@ -54,26 +53,28 @@ export function AppSidebar() {
     user ? item.roles.includes(user.role) : false
   );
 
-  const roleColor: Record<string, string> = {
-    ADMIN: "bg-accent/15 text-accent border border-accent/25",
-    MANAGER: "bg-info/15 text-info border border-info/25",
-    EMPLOYEE: "bg-sidebar-accent text-sidebar-accent-foreground",
+  const roleBadge: Record<string, string> = {
+    ADMIN: "bg-accent/15 text-accent border-accent/20",
+    MANAGER: "bg-info/15 text-info border-info/20",
+    EMPLOYEE: "bg-sidebar-accent/80 text-sidebar-accent-foreground border-sidebar-border",
   };
 
   return (
     <Sidebar collapsible="icon">
-      {/* ── Logo / Brand ── */}
-      <div className="flex items-center justify-center px-3 py-5 border-b border-sidebar-border">
+      {/* Brand */}
+      <div className="flex items-center justify-center px-3 py-5 border-b border-sidebar-border/60">
         {collapsed ? (
-          <img src={companyIcon} alt="LC Monitor" className="h-10 w-auto object-contain" />
+          <img src={companyIcon} alt="LC" className="h-9 w-auto object-contain" />
         ) : (
           <div className="flex items-center gap-3">
-            <img src={companyIcon} alt="LC Monitor" className="h-12 w-auto object-contain" />
+            <div className="h-11 w-11 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center p-1.5">
+              <img src={companyIcon} alt="LC" className="h-full w-auto object-contain" />
+            </div>
             <div>
-              <span className="text-sm font-display font-bold text-sidebar-accent-foreground tracking-tight">
+              <span className="text-[15px] font-display font-bold text-white tracking-tight leading-none">
                 LC Monitor
               </span>
-              <span className="block text-[10px] text-sidebar-muted font-medium tracking-wider uppercase">
+              <span className="block text-[10px] text-sidebar-muted font-medium tracking-[0.12em] uppercase mt-0.5">
                 Workforce
               </span>
             </div>
@@ -81,10 +82,10 @@ export function AppSidebar() {
         )}
       </div>
 
-      <SidebarContent className="px-2 pt-4">
-        {/* ── Main Navigation ── */}
+      <SidebarContent className="px-2.5 pt-5">
+        {/* Main Nav */}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-sidebar-muted mb-2">
+          <SidebarGroupLabel className="section-label px-3 mb-2.5 text-sidebar-muted">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -97,17 +98,17 @@ export function AppSidebar() {
                       asChild
                       isActive={active}
                       tooltip={item.title}
-                      className={`rounded-lg transition-all duration-150 ${
+                      className={`rounded-lg h-9 transition-all duration-150 ${
                         active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-inner-glow"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                          ? "bg-sidebar-accent text-white font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-white/90"
                       }`}
                     >
                       <NavLink to={item.url} end>
-                        <item.icon className="h-4 w-4 shrink-0" />
+                        <item.icon className="h-[15px] w-[15px] shrink-0" />
                         <span className="truncate text-[13px]">{item.title}</span>
                         {active && !collapsed && (
-                          <ChevronRight className="ml-auto h-3 w-3 opacity-40" />
+                          <ChevronRight className="ml-auto h-3 w-3 opacity-30" />
                         )}
                       </NavLink>
                     </SidebarMenuButton>
@@ -118,14 +119,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Admin Section ── */}
+        {/* Admin */}
         {user?.role === "ADMIN" && (
           <>
             {!collapsed && (
-              <Separator className="mx-3 my-3 bg-sidebar-border/60" />
+              <div className="mx-3 my-4 h-px bg-sidebar-border/40" />
             )}
             <SidebarGroup>
-              <SidebarGroupLabel className="px-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-sidebar-muted mb-2">
+              <SidebarGroupLabel className="section-label px-3 mb-2.5 text-sidebar-muted">
                 Administration
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -138,17 +139,17 @@ export function AppSidebar() {
                           asChild
                           isActive={active}
                           tooltip={item.title}
-                          className={`rounded-lg transition-all duration-150 ${
+                          className={`rounded-lg h-9 transition-all duration-150 ${
                             active
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-inner-glow"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                              ? "bg-sidebar-accent text-white font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-white/90"
                           }`}
                         >
                           <NavLink to={item.url} end>
-                            <item.icon className="h-4 w-4 shrink-0" />
+                            <item.icon className="h-[15px] w-[15px] shrink-0" />
                             <span className="truncate text-[13px]">{item.title}</span>
                             {active && !collapsed && (
-                              <ChevronRight className="ml-auto h-3 w-3 opacity-40" />
+                              <ChevronRight className="ml-auto h-3 w-3 opacity-30" />
                             )}
                           </NavLink>
                         </SidebarMenuButton>
@@ -162,23 +163,21 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* ── Footer / User Info ── */}
-      <SidebarFooter className="border-t border-sidebar-border/60 px-3 py-3">
+      {/* Footer */}
+      <SidebarFooter className="border-t border-sidebar-border/40 px-3 py-3.5">
         {user && !collapsed && (
-          <div className="mb-2 px-1">
+          <div className="mb-2.5 px-1">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-sidebar-accent flex items-center justify-center text-xs font-bold text-sidebar-accent-foreground shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sidebar-accent to-sidebar-accent/60 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
                 {user.first_name[0]}{user.last_name[0]}
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-medium text-sidebar-accent-foreground truncate">
+                <div className="text-[13px] font-medium text-white/90 truncate leading-tight">
                   {user.first_name} {user.last_name}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Badge className={`text-[9px] px-1.5 py-0 font-semibold ${roleColor[user.role] || ""}`}>
-                    {user.role}
-                  </Badge>
-                </div>
+                <Badge className={`text-[9px] px-1.5 py-0 font-semibold mt-0.5 border ${roleBadge[user.role] || ""}`}>
+                  {user.role}
+                </Badge>
               </div>
             </div>
           </div>
@@ -188,9 +187,9 @@ export function AppSidebar() {
             <SidebarMenuButton
               onClick={logout}
               tooltip="Sign out"
-              className="rounded-lg text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="rounded-lg h-9 text-sidebar-foreground hover:bg-destructive/10 hover:text-red-400 transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-[15px] w-[15px]" />
               <span className="text-[13px]">Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
