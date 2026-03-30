@@ -56,8 +56,8 @@ const LoginPage = () => {
 
         <div className="relative z-10 text-center px-16 max-w-xl">
           <div className="mb-10 flex justify-center">
-            <div className="rounded-2xl bg-white/[0.08] backdrop-blur-md p-8 border border-white/[0.08] shadow-2xl">
-              <img src={companyLogo} alt="LC Monitor" className="h-32 w-auto object-contain brightness-0 invert" />
+            <div className="rounded-2xl bg-white/[0.08] backdrop-blur-md p-10 border border-white/[0.08] shadow-2xl">
+              <img src={companyLogo} alt="LC Monitor" className="h-44 w-auto object-contain brightness-0 invert" />
             </div>
           </div>
           <h1 className="text-4xl font-display font-extrabold text-white tracking-tight mb-3 leading-tight">
