@@ -14,29 +14,35 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b border-border/60 header-glass px-5 sticky top-0 z-10">
+          <header className="h-14 flex items-center justify-between border-b border-border/50 header-glass px-5 sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-              <div className="h-4 w-px bg-border hidden sm:block" />
-              <span className="text-xs text-muted-foreground font-medium tracking-wide hidden sm:inline uppercase">
+              <div className="h-4 w-px bg-border/60 hidden sm:block" />
+              <span className="section-label hidden sm:inline">
                 Employee Time & Attendance
               </span>
             </div>
             {user && (
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                  <div className="h-7 w-7 rounded-full bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary">
                     {user.first_name[0]}{user.last_name[0]}
                   </div>
                   <span className="text-sm font-medium text-foreground">
                     {user.first_name} {user.last_name}
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 border-border/60 text-muted-foreground">
+                  <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 border-border/50 text-muted-foreground">
                     {user.role}
                   </Badge>
                 </div>
-                <div className="h-4 w-px bg-border hidden sm:block" />
-                <Button variant="ghost" size="icon" onClick={logout} title="Sign out" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors">
+                <div className="h-4 w-px bg-border/50 hidden sm:block" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  title="Sign out"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                >
                   <LogOut className="h-3.5 w-3.5" />
                 </Button>
               </div>
