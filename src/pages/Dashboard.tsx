@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Users, CalendarCheck, AlertTriangle, Activity, Timer, UsersRound } from "lucide-react";
+import { Clock, Users, CalendarCheck, AlertTriangle, Activity, Timer, UsersRound, Coffee } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function StatCard({
