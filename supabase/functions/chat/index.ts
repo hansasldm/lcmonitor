@@ -332,6 +332,54 @@ serve(async (req) => {
       return json({ message }, 201);
     }
 
+    // ── GET /search?q=term — search messages across user's groups ──
+    if (resource === "search" && req.method === "GET") {
+      const q = url.searchParams.get("q")?.trim();
+      if (!q || q.length < 2) return json({ error: "Search query must be at least 2 characters" }, 400);
+
+      // Get user's group IDs
+      const { data: memberships } = await supabase
+        .from("chat_group_members")
+        .select("group_id")
+        .eq("user_id", userId);
+      const groupIds = (memberships || []).map((m: { group_id: string }) => m.group_id);
+      if (groupIds.length === 0) return json({ messages: [] });
+
+      const { data: messages, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .in("group_id", groupIds)
+        .eq("is_deleted", false)
+        .ilike("message_text", `%${q}%`)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+
+      // Get sender info
+      const senderIds = [...new Set((messages || []).map((m: { sender_id: string }) => m.sender_id))];
+      const { data: senders } = senderIds.length > 0
+        ? await supabase.from("users").select("id, email, first_name, last_name").in("id", senderIds)
+        : { data: [] };
+      const senderMap: Record<string, unknown> = {};
+      (senders || []).forEach((u: { id: string }) => { senderMap[u.id] = u; });
+
+      // Get group names
+      const msgGroupIds = [...new Set((messages || []).map((m: { group_id: string }) => m.group_id))];
+      const { data: groups } = msgGroupIds.length > 0
+        ? await supabase.from("chat_groups").select("id, name, group_type").in("id", msgGroupIds)
+        : { data: [] };
+      const groupMap: Record<string, unknown> = {};
+      (groups || []).forEach((g: { id: string }) => { groupMap[g.id] = g; });
+
+      const enriched = (messages || []).map((m: { sender_id: string; group_id: string }) => ({
+        ...m,
+        sender: senderMap[m.sender_id] || null,
+        group: groupMap[m.group_id] || null,
+      }));
+
+      return json({ messages: enriched });
+    }
+
     return json({ error: "Not found" }, 404);
   } catch (err) {
     console.error(err);

@@ -82,6 +82,11 @@ export const chatApi = {
       body: JSON.stringify({ message_text: messageText }),
     }),
 
+  searchMessages: (query: string): Promise<{ messages: (ChatMessage & { group: { id: string; name: string; group_type: string } | null })[] }> => {
+    const params = new URLSearchParams({ q: query });
+    return request(`search?${params}`);
+  },
+
   startDirect: (targetUserId: string): Promise<{ group: ChatGroup; created: boolean }> =>
     request("direct", {
       method: "POST",
