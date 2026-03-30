@@ -43,6 +43,11 @@ export default function ChatsPage() {
   const [allUsers, setAllUsers] = useState<{ id: string; email: string; first_name: string; last_name: string }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
 
+  // Direct message state
+  const [dmOpen, setDmOpen] = useState(false);
+  const [dmTargetId, setDmTargetId] = useState("");
+  const [dmLoading, setDmLoading] = useState(false);
+
   const loadGroups = useCallback(async () => {
     try {
       const { groups } = await chatApi.getGroups();
