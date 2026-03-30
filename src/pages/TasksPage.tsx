@@ -94,7 +94,7 @@ function TaskCard({
                   </Select>
                   <Select
                     value={task.priority}
-                    onValueChange={(v) => onUpdate({ id: task.id, priority: v })}
+                    onValueChange={(v) => onUpdate({ id: task.id, priority: v as Task["priority"] })}
                   >
                     <SelectTrigger className="h-7 text-[11px] w-auto min-w-[80px]">
                       <SelectValue />
