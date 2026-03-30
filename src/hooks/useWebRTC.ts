@@ -428,6 +428,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     incomingCall,
     isMuted,
     isVideoOff,
+    isScreenSharing,
     remoteUserName,
     callDuration,
     localVideoRef,
@@ -438,6 +439,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     endCall,
     toggleMute,
     toggleVideo,
+    toggleScreenShare,
     listenForCalls,
   };
 }
