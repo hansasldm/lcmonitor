@@ -10,6 +10,7 @@ import {
   UsersRound,
   MessageSquare,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 import companyIcon from "@/assets/company-icon.png";
 import { NavLink } from "@/components/NavLink";
