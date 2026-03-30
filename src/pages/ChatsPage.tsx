@@ -179,6 +179,22 @@ export default function ChatsPage() {
     } catch { /* ignore */ }
   };
 
+  const handleStartDM = async () => {
+    if (!dmTargetId) return;
+    setDmLoading(true);
+    try {
+      const { group } = await chatApi.startDirect(dmTargetId);
+      setDmOpen(false);
+      setDmTargetId("");
+      await loadGroups();
+      setSelectedGroup(group);
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to start chat", variant: "destructive" });
+    } finally {
+      setDmLoading(false);
+    }
+  };
+
   const isAdmin = user?.role === "ADMIN";
 
   // WebRTC calling
