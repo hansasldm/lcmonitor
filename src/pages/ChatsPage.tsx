@@ -343,7 +343,7 @@ export default function ChatsPage() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t border-border bg-card">
+            <div className="p-4 border-t border-border/50 header-glass">
               <form
                 onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                 className="flex gap-2"
