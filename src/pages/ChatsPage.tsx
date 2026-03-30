@@ -176,6 +176,19 @@ export default function ChatsPage() {
 
   const isAdmin = user?.role === "ADMIN";
 
+  // WebRTC calling
+  const webrtc = useWebRTC({
+    userId: user?.id || "",
+    userName: user ? `${user.first_name} ${user.last_name}` : "",
+  });
+
+  // Listen for incoming calls on all groups
+  useEffect(() => {
+    if (!groups.length || !user?.id) return;
+    const unsub = webrtc.listenForCalls(groups.map((g) => g.id));
+    return unsub;
+  }, [groups, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading chats...</div>;
   }
