@@ -97,10 +97,13 @@ const LoginPage = () => {
 
         <div className="w-full max-w-[380px] animate-fade-in">
           {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-10">
+          <div className="lg:hidden flex flex-col items-center mb-10">
             <div className="rounded-2xl bg-muted/50 p-8 border border-border/60">
               <img src={companyLogo} alt="LC Monitor" className="h-36 w-auto object-contain" />
             </div>
+            <h1 className="text-2xl font-display font-extrabold tracking-tight text-foreground mt-4">
+              LC Monitor
+            </h1>
           </div>
 
           <div className="mb-8">
