@@ -48,6 +48,12 @@ export default function ChatsPage() {
   const [dmTargetId, setDmTargetId] = useState("");
   const [dmLoading, setDmLoading] = useState(false);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<(ChatMessage & { group: { id: string; name: string; group_type: string } | null })[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
   const loadGroups = useCallback(async () => {
     try {
       const { groups } = await chatApi.getGroups();
