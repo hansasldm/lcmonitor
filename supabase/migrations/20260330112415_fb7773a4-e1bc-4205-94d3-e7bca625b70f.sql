@@ -1,0 +1,1 @@
+ALTER TYPE public.chat_group_type ADD VALUE IF NOT EXISTS 'DIRECT';
