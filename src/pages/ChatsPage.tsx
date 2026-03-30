@@ -201,6 +201,27 @@ export default function ChatsPage() {
     }
   };
 
+  const handleSearch = useCallback(async (q: string) => {
+    setSearchQuery(q);
+    if (q.trim().length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    try {
+      const { messages } = await chatApi.searchMessages(q.trim());
+      setSearchResults(messages);
+    } catch { setSearchResults([]); }
+    finally { setSearching(false); }
+  }, []);
+
+  const handleSearchResultClick = (result: typeof searchResults[0]) => {
+    const group = groups.find((g) => g.id === result.group_id);
+    if (group) {
+      setSelectedGroup(group);
+      setShowSearch(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  };
+
   const isAdmin = user?.role === "ADMIN";
 
   // WebRTC calling
