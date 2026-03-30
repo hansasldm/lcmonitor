@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ── CORS (restricted origins) ──
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("origin") || "";
   const allowed =
@@ -13,7 +12,6 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-// ── Validation ──
 function isUUID(v: unknown): boolean {
   return typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 }
@@ -23,11 +21,7 @@ function validatePeriod(v: unknown): string {
   return "today";
 }
 
-// ── JWT verify ──
-async function verifyJWT(
-  token: string,
-  secret: string
-): Promise<Record<string, unknown> | null> {
+async function verifyJWT(token: string, secret: string): Promise<Record<string, unknown> | null> {
   try {
     const [header, payload, signature] = token.split(".");
     const encoder = new TextEncoder();
@@ -102,7 +96,30 @@ serve(async (req) => {
         .eq("date", todayDate())
         .maybeSingle();
       if (error) throw error;
-      return json({ session: session || null, is_working: session ? !session.end_time : false });
+
+      // Get today's breaks
+      const { data: breaks } = await supabase
+        .from("breaks")
+        .select("id, break_start, break_end, duration_seconds")
+        .eq("user_id", userId)
+        .eq("date", todayDate())
+        .order("break_start", { ascending: true });
+
+      const activeBreak = (breaks || []).find((b: { break_end: string | null }) => !b.break_end) || null;
+      const totalBreakSeconds = (breaks || []).reduce((sum: number, b: { duration_seconds: number; break_start: string; break_end: string | null }) => {
+        if (b.break_end) return sum + b.duration_seconds;
+        // Active break - calculate live duration
+        return sum + Math.floor((Date.now() - new Date(b.break_start).getTime()) / 1000);
+      }, 0);
+
+      return json({
+        session: session || null,
+        is_working: session ? !session.end_time : false,
+        on_break: !!activeBreak,
+        active_break: activeBreak,
+        breaks: breaks || [],
+        total_break_seconds: totalBreakSeconds,
+      });
     }
 
     // POST /work-sessions/clock-in
@@ -142,9 +159,43 @@ serve(async (req) => {
       if (fetchErr) throw fetchErr;
       if (!session || session.end_time) return json({ error: "No active session to clock out" }, 400);
 
+      // End any active break first
+      const { data: activeBreak } = await supabase
+        .from("breaks")
+        .select("id, break_start")
+        .eq("session_id", session.id)
+        .eq("user_id", userId)
+        .is("break_end", null)
+        .maybeSingle();
+
       const now = new Date();
+
+      if (activeBreak) {
+        const breakDuration = Math.floor((now.getTime() - new Date(activeBreak.break_start).getTime()) / 1000);
+        await supabase
+          .from("breaks")
+          .update({ break_end: now.toISOString(), duration_seconds: breakDuration })
+          .eq("id", activeBreak.id);
+      }
+
+      // Calculate total break time
+      const { data: allBreaks } = await supabase
+        .from("breaks")
+        .select("duration_seconds, break_start, break_end")
+        .eq("session_id", session.id);
+
+      let totalBreakSec = 0;
+      (allBreaks || []).forEach((b: { duration_seconds: number; break_end: string | null; break_start: string }) => {
+        if (b.break_end) {
+          totalBreakSec += b.duration_seconds;
+        } else {
+          totalBreakSec += Math.floor((now.getTime() - new Date(b.break_start).getTime()) / 1000);
+        }
+      });
+
       const startTime = new Date(session.start_time);
-      const activeSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      const totalSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      const activeSeconds = Math.max(0, totalSeconds - totalBreakSec);
 
       const { data: updated, error: updateErr } = await supabase
         .from("work_sessions")
@@ -154,6 +205,76 @@ serve(async (req) => {
         .single();
       if (updateErr) throw updateErr;
       return json({ session: updated, is_working: false });
+    }
+
+    // POST /work-sessions/break-in (start a break)
+    if (action === "break-in" && req.method === "POST") {
+      const today = todayDate();
+      const { data: session } = await supabase
+        .from("work_sessions")
+        .select("id, end_time")
+        .eq("user_id", userId)
+        .eq("date", today)
+        .maybeSingle();
+
+      if (!session || session.end_time) return json({ error: "No active session. Clock in first." }, 400);
+
+      // Check if already on break
+      const { data: existingBreak } = await supabase
+        .from("breaks")
+        .select("id")
+        .eq("session_id", session.id)
+        .eq("user_id", userId)
+        .is("break_end", null)
+        .maybeSingle();
+
+      if (existingBreak) return json({ error: "Already on break" }, 409);
+
+      const now = new Date().toISOString();
+      const { data: newBreak, error } = await supabase
+        .from("breaks")
+        .insert({ session_id: session.id, user_id: userId, date: today, break_start: now })
+        .select("id, break_start, break_end, duration_seconds")
+        .single();
+      if (error) throw error;
+
+      return json({ break: newBreak, on_break: true }, 201);
+    }
+
+    // POST /work-sessions/break-out (end a break)
+    if (action === "break-out" && req.method === "POST") {
+      const today = todayDate();
+      const { data: session } = await supabase
+        .from("work_sessions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("date", today)
+        .maybeSingle();
+
+      if (!session) return json({ error: "No active session" }, 400);
+
+      const { data: activeBreak } = await supabase
+        .from("breaks")
+        .select("id, break_start")
+        .eq("session_id", session.id)
+        .eq("user_id", userId)
+        .is("break_end", null)
+        .maybeSingle();
+
+      if (!activeBreak) return json({ error: "Not on break" }, 400);
+
+      const now = new Date();
+      const durationSeconds = Math.floor((now.getTime() - new Date(activeBreak.break_start).getTime()) / 1000);
+
+      const { data: updated, error } = await supabase
+        .from("breaks")
+        .update({ break_end: now.toISOString(), duration_seconds: durationSeconds })
+        .eq("id", activeBreak.id)
+        .select("id, break_start, break_end, duration_seconds")
+        .single();
+      if (error) throw error;
+
+      return json({ break: updated, on_break: false });
     }
 
     // GET /work-sessions/active-now
@@ -175,7 +296,23 @@ serve(async (req) => {
         if (usersData) users = Object.fromEntries(usersData.map((u) => [u.id, u]));
       }
 
-      const activeSessions = (data || []).map((s) => ({ ...s, user: users[s.user_id] || null }));
+      // Check who's on break
+      const sessionIds = (data || []).map((s) => s.id);
+      let breakMap: Record<string, boolean> = {};
+      if (sessionIds.length > 0) {
+        const { data: activeBreaks } = await supabase
+          .from("breaks")
+          .select("session_id")
+          .in("session_id", sessionIds)
+          .is("break_end", null);
+        (activeBreaks || []).forEach((b: { session_id: string }) => { breakMap[b.session_id] = true; });
+      }
+
+      const activeSessions = (data || []).map((s) => ({
+        ...s,
+        user: users[s.user_id] || null,
+        on_break: !!breakMap[s.id],
+      }));
       return json({ active_sessions: activeSessions });
     }
 
