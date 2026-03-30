@@ -406,6 +406,73 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assignee_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          position: number
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string
@@ -554,6 +621,8 @@ export type Database = {
         | "MANUAL_CLOCK_OUT"
       os_type: "WINDOWS" | "MACOS" | "LINUX"
       session_source: "AUTO" | "MANUAL" | "MIXED"
+      task_priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+      task_status: "TODO" | "IN_PROGRESS" | "DONE"
       user_role: "EMPLOYEE" | "MANAGER" | "ADMIN"
       user_status: "ACTIVE" | "INACTIVE"
     }
@@ -698,6 +767,8 @@ export const Constants = {
       ],
       os_type: ["WINDOWS", "MACOS", "LINUX"],
       session_source: ["AUTO", "MANUAL", "MIXED"],
+      task_priority: ["LOW", "MEDIUM", "HIGH", "URGENT"],
+      task_status: ["TODO", "IN_PROGRESS", "DONE"],
       user_role: ["EMPLOYEE", "MANAGER", "ADMIN"],
       user_status: ["ACTIVE", "INACTIVE"],
     },
