@@ -396,48 +396,81 @@ export default function ChatsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Chats</h1>
-          <p className="text-muted-foreground text-sm">Group conversations</p>
+          <p className="text-muted-foreground text-sm">Group & direct conversations</p>
         </div>
-        {isAdmin && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <div className="flex items-center gap-2">
+          {/* New Direct Chat - available to all users */}
+          <Dialog open={dmOpen} onOpenChange={(o) => { setDmOpen(o); if (o) loadAllUsers(); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-1" /> New Group</Button>
+              <Button variant="outline"><User className="h-4 w-4 mr-1" /> New Chat</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Create Chat Group</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Start a Direct Chat</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Name</Label>
-                  <Input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
-                </div>
-                <div>
-                  <Label>Description (optional)</Label>
-                  <Input value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} placeholder="What's this group for?" />
-                </div>
-                <div>
-                  <Label>Type</Label>
-                  <Select value={newGroupType} onValueChange={setNewGroupType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Label>Select a person</Label>
+                  <Select value={dmTargetId} onValueChange={setDmTargetId}>
+                    <SelectTrigger><SelectValue placeholder="Choose someone..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GENERAL">General</SelectItem>
-                      <SelectItem value="TEAM">Team</SelectItem>
-                      <SelectItem value="PROJECT">Project</SelectItem>
+                      {allUsers
+                        .filter((u) => u.id !== user?.id)
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.first_name} {u.last_name} ({u.email})
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleCreateGroup} disabled={!newGroupName.trim()} className="w-full">Create Group</Button>
+                <Button onClick={handleStartDM} disabled={!dmTargetId || dmLoading} className="w-full">
+                  {dmLoading ? "Starting..." : "Start Chat"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
-        )}
+
+          {/* New Group - admin only */}
+          {isAdmin && (
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-1" /> New Group</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Create Chat Group</DialogTitle></DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
+                  </div>
+                  <div>
+                    <Label>Description (optional)</Label>
+                    <Input value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} placeholder="What's this group for?" />
+                  </div>
+                  <div>
+                    <Label>Type</Label>
+                    <Select value={newGroupType} onValueChange={setNewGroupType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GENERAL">General</SelectItem>
+                        <SelectItem value="TEAM">Team</SelectItem>
+                        <SelectItem value="PROJECT">Project</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCreateGroup} disabled={!newGroupName.trim()} className="w-full">Create Group</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       {groups.length === 0 ? (
         <Card className="p-12 text-center">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-foreground mb-1">No chat groups yet</h3>
+          <h3 className="font-semibold text-foreground mb-1">No chats yet</h3>
           <p className="text-sm text-muted-foreground">
-            {isAdmin ? "Create a group to get started." : "Ask an admin to add you to a group."}
+            Start a direct chat or {isAdmin ? "create a group" : "ask an admin to add you to a group"}.
           </p>
         </Card>
       ) : (
