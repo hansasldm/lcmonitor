@@ -125,6 +125,73 @@ serve(async (req) => {
       return json({ group }, 201);
     }
 
+    // ── POST /direct — start or get existing direct (1-on-1) chat ──
+    if (resource === "direct" && req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const targetId = body.target_user_id;
+      if (!isUUID(targetId)) return json({ error: "Valid target_user_id required" }, 400);
+      if (targetId === userId) return json({ error: "Cannot DM yourself" }, 400);
+
+      // Check if DM already exists between these two users
+      const { data: myDMs } = await supabase
+        .from("chat_group_members")
+        .select("group_id")
+        .eq("user_id", userId);
+      const { data: theirDMs } = await supabase
+        .from("chat_group_members")
+        .select("group_id")
+        .eq("user_id", targetId);
+
+      const myGroupIds = (myDMs || []).map((m: { group_id: string }) => m.group_id);
+      const theirGroupIds = (theirDMs || []).map((m: { group_id: string }) => m.group_id);
+      const commonIds = myGroupIds.filter((id: string) => theirGroupIds.includes(id));
+
+      if (commonIds.length > 0) {
+        const { data: existing } = await supabase
+          .from("chat_groups")
+          .select("*")
+          .in("id", commonIds)
+          .eq("group_type", "DIRECT")
+          .limit(1);
+        if (existing && existing.length > 0) {
+          return json({ group: existing[0], created: false });
+        }
+      }
+
+      // Get target user name for the DM group name
+      const { data: targetUser } = await supabase
+        .from("users")
+        .select("first_name, last_name")
+        .eq("id", targetId)
+        .single();
+      const { data: currentUser } = await supabase
+        .from("users")
+        .select("first_name, last_name")
+        .eq("id", userId)
+        .single();
+
+      const tName = targetUser ? `${targetUser.first_name} ${targetUser.last_name}` : "User";
+      const cName = currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : "User";
+
+      const { data: group, error } = await supabase
+        .from("chat_groups")
+        .insert({
+          name: `${cName} & ${tName}`,
+          group_type: "DIRECT",
+          created_by: userId,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      await supabase.from("chat_group_members").insert([
+        { group_id: group.id, user_id: userId, role: "MEMBER" },
+        { group_id: group.id, user_id: targetId, role: "MEMBER" },
+      ]);
+
+      return json({ group, created: true }, 201);
+    }
+
     // ── GET /groups/:id/members ──
     if (resource === "groups" && resourceId && subResource === "members" && req.method === "GET") {
       if (!isUUID(resourceId)) return json({ error: "Invalid group ID" }, 400);
