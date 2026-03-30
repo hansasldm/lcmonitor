@@ -340,15 +340,20 @@ function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-0">
-              {activeSessions.map((s: { id: string; start_time: string; user: { first_name: string; last_name: string; email: string } | null }) => (
+              {activeSessions.map((s: { id: string; start_time: string; on_break?: boolean; user: { first_name: string; last_name: string; email: string } | null }) => (
                 <div key={s.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-lg bg-success/8 flex items-center justify-center text-[10px] font-bold text-success shrink-0">
+                    <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${s.on_break ? "bg-warning/8 text-warning" : "bg-success/8 text-success"}`}>
                       {s.user ? `${s.user.first_name[0]}${s.user.last_name[0]}` : "?"}
                     </div>
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium flex items-center gap-2">
                         {s.user ? `${s.user.first_name} ${s.user.last_name}` : "Unknown"}
+                        {s.on_break && (
+                          <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px] px-1.5 py-0">
+                            <Coffee className="h-2.5 w-2.5 mr-0.5" /> Break
+                          </Badge>
+                        )}
                       </p>
                       <p className="text-[11px] text-muted-foreground">{s.user?.email}</p>
                     </div>
