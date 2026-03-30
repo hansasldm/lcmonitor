@@ -197,6 +197,31 @@ export default function ChatsPage() {
   if (selectedGroup) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)]">
+        {/* Call overlays */}
+        {webrtc.callState !== "idle" && (
+          <CallScreen
+            callState={webrtc.callState}
+            callType={webrtc.callType}
+            remoteUserName={webrtc.remoteUserName}
+            callDuration={webrtc.callDuration}
+            isMuted={webrtc.isMuted}
+            isVideoOff={webrtc.isVideoOff}
+            localVideoRef={webrtc.localVideoRef as any}
+            remoteVideoRef={webrtc.remoteVideoRef as any}
+            onEndCall={webrtc.endCall}
+            onToggleMute={webrtc.toggleMute}
+            onToggleVideo={webrtc.toggleVideo}
+          />
+        )}
+
+        <IncomingCallDialog
+          open={!!webrtc.incomingCall}
+          callerName={webrtc.incomingCall?.callerName || ""}
+          callType={webrtc.incomingCall?.callType || "audio"}
+          onAnswer={() => webrtc.incomingCall && webrtc.answerCall(webrtc.incomingCall)}
+          onReject={() => webrtc.incomingCall && webrtc.rejectCall(webrtc.incomingCall)}
+        />
+
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
           <Button variant="ghost" size="icon" onClick={() => { setSelectedGroup(null); setMessages([]); }}>
@@ -207,6 +232,28 @@ export default function ChatsPage() {
             {selectedGroup.description && (
               <p className="text-xs text-muted-foreground">{selectedGroup.description}</p>
             )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-primary"
+              onClick={() => webrtc.startCall(selectedGroup.id, "audio", selectedGroup.name)}
+              disabled={webrtc.callState !== "idle"}
+              title="Voice call"
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-primary"
+              onClick={() => webrtc.startCall(selectedGroup.id, "video", selectedGroup.name)}
+              disabled={webrtc.callState !== "idle"}
+              title="Video call"
+            >
+              <Video className="h-4 w-4" />
+            </Button>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowMembers(!showMembers)}>
             <Users className="h-4 w-4 mr-1" />
