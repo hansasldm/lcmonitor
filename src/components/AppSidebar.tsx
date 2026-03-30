@@ -12,7 +12,7 @@ import {
   ChevronRight,
   ClipboardList,
 } from "lucide-react";
-import companyIcon from "@/assets/company-icon.png";
+import companyLogo from "@/assets/lemoncode-logo.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
