@@ -39,6 +39,8 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const currentCallId = useRef<string | null>(null);
   const durationInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const screenStream = useRef<MediaStream | null>(null);
+  const senderRef = useRef<RTCRtpSender | null>(null);
 
   // Cleanup
   const cleanup = useCallback(() => {
