@@ -549,12 +549,12 @@ export default function ChatsPage() {
           {groups.map((group) => (
             <Card
               key={group.id}
-              className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="card-premium p-4 cursor-pointer hover:bg-muted/20"
               onClick={() => setSelectedGroup(group)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/20" : "bg-primary/10"}`}>
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/10" : "bg-primary/8"}`}>
                     {group.group_type === "DIRECT" ? (
                       <User className="h-5 w-5 text-accent-foreground" />
                     ) : (
