@@ -206,11 +206,13 @@ export default function ChatsPage() {
             callDuration={webrtc.callDuration}
             isMuted={webrtc.isMuted}
             isVideoOff={webrtc.isVideoOff}
+            isScreenSharing={webrtc.isScreenSharing}
             localVideoRef={webrtc.localVideoRef as any}
             remoteVideoRef={webrtc.remoteVideoRef as any}
             onEndCall={webrtc.endCall}
             onToggleMute={webrtc.toggleMute}
             onToggleVideo={webrtc.toggleVideo}
+            onToggleScreenShare={webrtc.toggleScreenShare}
           />
         )}
 

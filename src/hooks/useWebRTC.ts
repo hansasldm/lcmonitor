@@ -27,6 +27,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
   const [callType, setCallType] = useState<"audio" | "video">("audio");
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [remoteUserName, setRemoteUserName] = useState("");
   const [callDuration, setCallDuration] = useState(0);
 
@@ -38,6 +39,8 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const currentCallId = useRef<string | null>(null);
   const durationInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const screenStream = useRef<MediaStream | null>(null);
+  const senderRef = useRef<RTCRtpSender | null>(null);
 
   // Cleanup
   const cleanup = useCallback(() => {
@@ -46,6 +49,9 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     peerConnection.current = null;
     localStream.current?.getTracks().forEach((t) => t.stop());
     localStream.current = null;
+    screenStream.current?.getTracks().forEach((t) => t.stop());
+    screenStream.current = null;
+    senderRef.current = null;
     remoteStream.current = null;
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -55,6 +61,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     setCallDuration(0);
     setIsMuted(false);
     setIsVideoOff(false);
+    setIsScreenSharing(false);
   }, []);
 
   const startDurationTimer = useCallback(() => {
@@ -336,6 +343,51 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     }
   }, []);
 
+  // Toggle screen sharing
+  const toggleScreenShare = useCallback(async () => {
+    if (!peerConnection.current) return;
+
+    if (isScreenSharing) {
+      // Stop screen share → revert to camera
+      screenStream.current?.getTracks().forEach((t) => t.stop());
+      screenStream.current = null;
+      const camTrack = localStream.current?.getVideoTracks()[0];
+      if (camTrack && senderRef.current) {
+        await senderRef.current.replaceTrack(camTrack);
+      }
+      setIsScreenSharing(false);
+    } else {
+      try {
+        const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        screenStream.current = screen;
+        const screenTrack = screen.getVideoTracks()[0];
+
+        // Find the video sender and replace track
+        const sender = peerConnection.current
+          .getSenders()
+          .find((s) => s.track?.kind === "video");
+        if (sender) {
+          senderRef.current = sender;
+          await sender.replaceTrack(screenTrack);
+        }
+
+        // When user stops sharing via browser UI
+        screenTrack.onended = () => {
+          const camTrack = localStream.current?.getVideoTracks()[0];
+          if (camTrack && senderRef.current) {
+            senderRef.current.replaceTrack(camTrack);
+          }
+          screenStream.current = null;
+          setIsScreenSharing(false);
+        };
+
+        setIsScreenSharing(true);
+      } catch (err) {
+        console.warn("Screen share cancelled or failed:", err);
+      }
+    }
+  }, [isScreenSharing]);
+
   // Listen for incoming calls on subscribed groups
   const listenForCalls = useCallback(
     (groupIds: string[]) => {
@@ -376,6 +428,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     incomingCall,
     isMuted,
     isVideoOff,
+    isScreenSharing,
     remoteUserName,
     callDuration,
     localVideoRef,
@@ -386,6 +439,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     endCall,
     toggleMute,
     toggleVideo,
+    toggleScreenShare,
     listenForCalls,
   };
 }
