@@ -56,8 +56,8 @@ const LoginPage = () => {
 
         <div className="relative z-10 text-center px-16 max-w-xl">
           <div className="mb-10 flex justify-center">
-            <div className="rounded-2xl bg-white/[0.08] backdrop-blur-md p-6 border border-white/[0.08] shadow-2xl">
-              <img src={companyLogo} alt="LC Monitor" className="h-20 w-auto object-contain brightness-0 invert" />
+            <div className="rounded-2xl bg-white/[0.08] backdrop-blur-md p-8 border border-white/[0.08] shadow-2xl">
+              <img src={companyLogo} alt="LC Monitor" className="h-32 w-auto object-contain brightness-0 invert" />
             </div>
           </div>
           <h1 className="text-4xl font-display font-extrabold text-white tracking-tight mb-3 leading-tight">
@@ -98,8 +98,8 @@ const LoginPage = () => {
         <div className="w-full max-w-[380px] animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-10">
-            <div className="rounded-xl bg-muted/50 p-4 border border-border/60">
-              <img src={companyLogo} alt="LC Monitor" className="h-14 w-auto object-contain" />
+            <div className="rounded-2xl bg-muted/50 p-6 border border-border/60">
+              <img src={companyLogo} alt="LC Monitor" className="h-24 w-auto object-contain" />
             </div>
           </div>
 
