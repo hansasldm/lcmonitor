@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import companyLogo from "@/assets/company-logo.png";
+import companyLogo from "@/assets/lemoncode-logo.png";
 import { Lock, Mail, Shield, BarChart3, Users, ArrowRight } from "lucide-react";
 
 const LoginPage = () => {
