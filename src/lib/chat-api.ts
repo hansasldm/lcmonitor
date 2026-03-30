@@ -81,4 +81,10 @@ export const chatApi = {
       method: "POST",
       body: JSON.stringify({ message_text: messageText }),
     }),
+
+  startDirect: (targetUserId: string): Promise<{ group: ChatGroup; created: boolean }> =>
+    request("direct", {
+      method: "POST",
+      body: JSON.stringify({ target_user_id: targetUserId }),
+    }),
 };

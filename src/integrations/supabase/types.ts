@@ -493,7 +493,7 @@ export type Database = {
     }
     Enums: {
       attendance_status: "PRESENT" | "ABSENT" | "LEAVE" | "HOLIDAY"
-      chat_group_type: "GENERAL" | "TEAM" | "PROJECT"
+      chat_group_type: "GENERAL" | "TEAM" | "PROJECT" | "DIRECT"
       chat_member_role: "ADMIN" | "MEMBER"
       correction_status: "PENDING" | "APPROVED" | "REJECTED"
       event_type:
@@ -636,7 +636,7 @@ export const Constants = {
   public: {
     Enums: {
       attendance_status: ["PRESENT", "ABSENT", "LEAVE", "HOLIDAY"],
-      chat_group_type: ["GENERAL", "TEAM", "PROJECT"],
+      chat_group_type: ["GENERAL", "TEAM", "PROJECT", "DIRECT"],
       chat_member_role: ["ADMIN", "MEMBER"],
       correction_status: ["PENDING", "APPROVED", "REJECTED"],
       event_type: [

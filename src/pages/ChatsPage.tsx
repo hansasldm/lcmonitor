@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Send, Plus, Users, ArrowLeft, UserPlus, UserMinus, Phone, Video } from "lucide-react";
+import { MessageSquare, Send, Plus, Users, ArrowLeft, UserPlus, UserMinus, Phone, Video, User } from "lucide-react";
 import { format } from "date-fns";
 import { adminApi } from "@/lib/admin-api";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -42,6 +42,11 @@ export default function ChatsPage() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<{ id: string; email: string; first_name: string; last_name: string }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
+
+  // Direct message state
+  const [dmOpen, setDmOpen] = useState(false);
+  const [dmTargetId, setDmTargetId] = useState("");
+  const [dmLoading, setDmLoading] = useState(false);
 
   const loadGroups = useCallback(async () => {
     try {
@@ -172,6 +177,22 @@ export default function ChatsPage() {
       const { users } = await adminApi.getUsers();
       setAllUsers(users);
     } catch { /* ignore */ }
+  };
+
+  const handleStartDM = async () => {
+    if (!dmTargetId) return;
+    setDmLoading(true);
+    try {
+      const { group } = await chatApi.startDirect(dmTargetId);
+      setDmOpen(false);
+      setDmTargetId("");
+      await loadGroups();
+      setSelectedGroup(group);
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to start chat", variant: "destructive" });
+    } finally {
+      setDmLoading(false);
+    }
   };
 
   const isAdmin = user?.role === "ADMIN";
@@ -375,48 +396,81 @@ export default function ChatsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Chats</h1>
-          <p className="text-muted-foreground text-sm">Group conversations</p>
+          <p className="text-muted-foreground text-sm">Group & direct conversations</p>
         </div>
-        {isAdmin && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <div className="flex items-center gap-2">
+          {/* New Direct Chat - available to all users */}
+          <Dialog open={dmOpen} onOpenChange={(o) => { setDmOpen(o); if (o) loadAllUsers(); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-1" /> New Group</Button>
+              <Button variant="outline"><User className="h-4 w-4 mr-1" /> New Chat</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Create Chat Group</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Start a Direct Chat</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Name</Label>
-                  <Input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
-                </div>
-                <div>
-                  <Label>Description (optional)</Label>
-                  <Input value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} placeholder="What's this group for?" />
-                </div>
-                <div>
-                  <Label>Type</Label>
-                  <Select value={newGroupType} onValueChange={setNewGroupType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Label>Select a person</Label>
+                  <Select value={dmTargetId} onValueChange={setDmTargetId}>
+                    <SelectTrigger><SelectValue placeholder="Choose someone..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GENERAL">General</SelectItem>
-                      <SelectItem value="TEAM">Team</SelectItem>
-                      <SelectItem value="PROJECT">Project</SelectItem>
+                      {allUsers
+                        .filter((u) => u.id !== user?.id)
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.first_name} {u.last_name} ({u.email})
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleCreateGroup} disabled={!newGroupName.trim()} className="w-full">Create Group</Button>
+                <Button onClick={handleStartDM} disabled={!dmTargetId || dmLoading} className="w-full">
+                  {dmLoading ? "Starting..." : "Start Chat"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
-        )}
+
+          {/* New Group - admin only */}
+          {isAdmin && (
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-1" /> New Group</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Create Chat Group</DialogTitle></DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
+                  </div>
+                  <div>
+                    <Label>Description (optional)</Label>
+                    <Input value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} placeholder="What's this group for?" />
+                  </div>
+                  <div>
+                    <Label>Type</Label>
+                    <Select value={newGroupType} onValueChange={setNewGroupType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GENERAL">General</SelectItem>
+                        <SelectItem value="TEAM">Team</SelectItem>
+                        <SelectItem value="PROJECT">Project</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCreateGroup} disabled={!newGroupName.trim()} className="w-full">Create Group</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       {groups.length === 0 ? (
         <Card className="p-12 text-center">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-foreground mb-1">No chat groups yet</h3>
+          <h3 className="font-semibold text-foreground mb-1">No chats yet</h3>
           <p className="text-sm text-muted-foreground">
-            {isAdmin ? "Create a group to get started." : "Ask an admin to add you to a group."}
+            Start a direct chat or {isAdmin ? "create a group" : "ask an admin to add you to a group"}.
           </p>
         </Card>
       ) : (
@@ -429,8 +483,12 @@ export default function ChatsPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-primary" />
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${group.group_type === "DIRECT" ? "bg-accent/20" : "bg-primary/10"}`}>
+                    {group.group_type === "DIRECT" ? (
+                      <User className="h-5 w-5 text-accent-foreground" />
+                    ) : (
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-medium text-foreground">{group.name}</h3>
@@ -439,7 +497,9 @@ export default function ChatsPage() {
                     )}
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-xs">{group.group_type}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {group.group_type === "DIRECT" ? "Direct" : group.group_type}
+                </Badge>
               </div>
             </Card>
           ))}
