@@ -49,6 +49,9 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     peerConnection.current = null;
     localStream.current?.getTracks().forEach((t) => t.stop());
     localStream.current = null;
+    screenStream.current?.getTracks().forEach((t) => t.stop());
+    screenStream.current = null;
+    senderRef.current = null;
     remoteStream.current = null;
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -58,6 +61,7 @@ export function useWebRTC({ userId, userName }: UseWebRTCOptions) {
     setCallDuration(0);
     setIsMuted(false);
     setIsVideoOff(false);
+    setIsScreenSharing(false);
   }, []);
 
   const startDurationTimer = useCallback(() => {
