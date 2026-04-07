@@ -183,61 +183,61 @@ serve(async (req) => {
 
     // POST /work-sessions/clock-out
     if (action === "clock-out" && req.method === "POST") {
-      const { data: session, error: fetchErr } = await supabase
-        .from("work_sessions")
-        .select("id, start_time, end_time")
-        .eq("user_id", userId)
-        .eq("date", todayDate())
-        .maybeSingle();
-      if (fetchErr) throw fetchErr;
-      if (!session || session.end_time) return json({ error: "No active session to clock out" }, 400);
-
-      // End any active break first
-      const { data: activeBreak } = await supabase
-        .from("breaks")
-        .select("id, break_start")
-        .eq("session_id", session.id)
-        .eq("user_id", userId)
-        .is("break_end", null)
-        .maybeSingle();
-
       const now = new Date();
 
-      if (activeBreak) {
-        const breakDuration = Math.floor((now.getTime() - new Date(activeBreak.break_start).getTime()) / 1000);
-        await supabase
-          .from("breaks")
-          .update({ break_end: now.toISOString(), duration_seconds: breakDuration })
-          .eq("id", activeBreak.id);
+      // Find ALL active sessions for this user (end_time IS NULL)
+      const { data: openSessions, error: fetchErr } = await supabase
+        .from("work_sessions")
+        .select("id, start_time")
+        .eq("user_id", userId)
+        .is("end_time", null);
+      if (fetchErr) throw fetchErr;
+      if (!openSessions || openSessions.length === 0) {
+        return json({ error: "No active session to clock out" }, 400);
       }
 
-      // Calculate total break time
-      const { data: allBreaks } = await supabase
-        .from("breaks")
-        .select("duration_seconds, break_start, break_end")
-        .eq("session_id", session.id);
+      const closedSessions = [];
 
-      let totalBreakSec = 0;
-      (allBreaks || []).forEach((b: { duration_seconds: number; break_end: string | null; break_start: string }) => {
-        if (b.break_end) {
-          totalBreakSec += b.duration_seconds;
-        } else {
-          totalBreakSec += Math.floor((now.getTime() - new Date(b.break_start).getTime()) / 1000);
+      for (const session of openSessions) {
+        // Close any active breaks on this session
+        const { data: activeBreaks } = await supabase
+          .from("breaks")
+          .select("id, break_start")
+          .eq("session_id", session.id)
+          .eq("user_id", userId)
+          .is("break_end", null);
+
+        if (activeBreaks && activeBreaks.length > 0) {
+          for (const ab of activeBreaks) {
+            const brkDur = Math.floor((now.getTime() - new Date(ab.break_start).getTime()) / 1000);
+            await supabase
+              .from("breaks")
+              .update({ break_end: now.toISOString(), duration_seconds: Math.max(0, brkDur) })
+              .eq("id", ab.id);
+          }
         }
-      });
 
-      const startTime = new Date(session.start_time);
-      const totalSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      const activeSeconds = Math.max(0, totalSeconds - totalBreakSec);
+        // Calculate total break time
+        const { data: allBreaks } = await supabase
+          .from("breaks")
+          .select("duration_seconds")
+          .eq("session_id", session.id);
+        const totalBreakSec = (allBreaks || []).reduce((s: number, b: { duration_seconds: number }) => s + b.duration_seconds, 0);
 
-      const { data: updated, error: updateErr } = await supabase
-        .from("work_sessions")
-        .update({ end_time: now.toISOString(), total_active_seconds: activeSeconds })
-        .eq("id", session.id)
-        .select("id, start_time, end_time, total_active_seconds, date")
-        .single();
-      if (updateErr) throw updateErr;
-      return json({ session: updated, is_working: false });
+        const totalSec = Math.floor((now.getTime() - new Date(session.start_time).getTime()) / 1000);
+        const activeSec = Math.max(0, totalSec - totalBreakSec);
+
+        const { data: updated, error: updateErr } = await supabase
+          .from("work_sessions")
+          .update({ end_time: now.toISOString(), total_active_seconds: activeSec })
+          .eq("id", session.id)
+          .select("id, start_time, end_time, total_active_seconds, date")
+          .single();
+        if (updateErr) throw updateErr;
+        closedSessions.push(updated);
+      }
+
+      return json({ session: closedSessions[0], sessions_closed: closedSessions.length, is_working: false });
     }
 
     // POST /work-sessions/break-in (start a break)
