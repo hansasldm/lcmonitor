@@ -299,6 +299,9 @@ serve(async (req) => {
         .select("id")
         .eq("user_id", userId)
         .eq("date", today)
+        .is("end_time", null)
+        .order("start_time", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (!session) return json({ error: "No active session" }, 400);
