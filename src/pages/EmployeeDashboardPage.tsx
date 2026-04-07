@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, LogIn, LogOut, Timer, Activity, Coffee, Play } from "lucide-react";
+import { Clock, LogIn, LogOut, Timer, Activity, Coffee, Play, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function formatDuration(totalSeconds: number): string {
@@ -29,39 +29,40 @@ export default function EmployeeDashboardPage() {
   });
 
   const session = data?.session ?? null;
+  const sessions = data?.sessions ?? [];
   const isWorking = data?.is_working ?? false;
   const onBreak = data?.on_break ?? false;
   const activeBreak = data?.active_break ?? null;
   const breaks = data?.breaks ?? [];
   const totalBreakSeconds = data?.total_break_seconds ?? 0;
+  const totalCompletedSeconds = data?.total_completed_seconds ?? 0;
+  const sessionCount = data?.session_count ?? 0;
 
+  // Calculate total active time: completed sessions + live active session
   useEffect(() => {
     if (!isWorking || !session?.start_time) {
-      setElapsed(session?.total_active_seconds ?? 0);
+      setElapsed(totalCompletedSeconds);
       return;
     }
     const startTime = new Date(session.start_time).getTime();
     const tick = () => {
       const now = Date.now();
-      const totalSec = Math.floor((now - startTime) / 1000);
-      if (onBreak) {
-        const breakStart = activeBreak ? new Date(activeBreak.break_start).getTime() : now;
-        const completedBreakSec = breaks
-          .filter((b: { break_end: string | null }) => b.break_end)
-          .reduce((sum: number, b: { duration_seconds: number }) => sum + b.duration_seconds, 0);
-        const currentBreakSec = Math.floor((now - breakStart) / 1000);
-        setElapsed(Math.max(0, totalSec - completedBreakSec - currentBreakSec));
-      } else {
-        const completedBreakSec = breaks
-          .filter((b: { break_end: string | null }) => b.break_end)
-          .reduce((sum: number, b: { duration_seconds: number }) => sum + b.duration_seconds, 0);
-        setElapsed(Math.max(0, totalSec - completedBreakSec));
-      }
+      const currentSessionSec = Math.floor((now - startTime) / 1000);
+      // Subtract breaks for the current active session
+      const sessionBreaks = breaks.filter((b: { session_id: string }) => b.session_id === session.id);
+      const completedBreakSec = sessionBreaks
+        .filter((b: { break_end: string | null }) => b.break_end)
+        .reduce((sum: number, b: { duration_seconds: number }) => sum + b.duration_seconds, 0);
+      const currentBreakSec = onBreak && activeBreak
+        ? Math.floor((now - new Date(activeBreak.break_start).getTime()) / 1000)
+        : 0;
+      const activeSessionTime = Math.max(0, currentSessionSec - completedBreakSec - currentBreakSec);
+      setElapsed(totalCompletedSeconds + activeSessionTime);
     };
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isWorking, session?.start_time, session?.total_active_seconds, onBreak, activeBreak, breaks]);
+  }, [isWorking, session?.start_time, session?.id, totalCompletedSeconds, onBreak, activeBreak, breaks]);
 
   useEffect(() => {
     if (!onBreak || !activeBreak?.break_start) { setBreakElapsed(0); return; }
@@ -93,7 +94,6 @@ export default function EmployeeDashboardPage() {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const sessionDone = session && session.end_time;
   const greeting = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening";
 
   return (
@@ -123,18 +123,21 @@ export default function EmployeeDashboardPage() {
               </Badge>
             ) : isWorking ? (
               <Badge className="bg-success/10 text-success border-success/20 text-sm px-3 py-1">Working</Badge>
-            ) : sessionDone ? (
-              <Badge variant="secondary" className="text-sm px-3 py-1">Done for today</Badge>
             ) : (
               <Badge variant="outline" className="text-sm px-3 py-1 border-border/50">Not clocked in</Badge>
+            )}
+            {sessionCount > 0 && !isWorking && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
+              </p>
             )}
           </CardContent>
         </Card>
 
-        {/* Active Time */}
+        {/* Total Active Time (across all sessions) */}
         <Card className="card-premium">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="section-label">Active Time</CardTitle>
+            <CardTitle className="section-label">Total Active Time</CardTitle>
             <div className="stat-icon bg-success/8">
               <Timer className="h-[18px] w-[18px] text-success" />
             </div>
@@ -178,33 +181,28 @@ export default function EmployeeDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Clock */}
+        {/* Sessions */}
         <Card className="card-premium">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="section-label">Clock</CardTitle>
+            <CardTitle className="section-label">Sessions</CardTitle>
             <div className="stat-icon bg-info/8">
-              <Clock className="h-[18px] w-[18px] text-info" />
+              <History className="h-[18px] w-[18px] text-info" />
             </div>
           </CardHeader>
-          <CardContent className="space-y-1.5">
-            {session?.start_time && (
-              <p className="text-xs text-muted-foreground">
-                In: <span className="font-mono tabular-nums text-foreground font-medium">{new Date(session.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-              </p>
-            )}
-            {session?.end_time && (
-              <p className="text-xs text-muted-foreground">
-                Out: <span className="font-mono tabular-nums text-foreground font-medium">{new Date(session.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-              </p>
-            )}
-            {!session && <p className="text-xs text-muted-foreground">No session today</p>}
+          <CardContent>
+            <div className="text-[28px] font-display font-extrabold font-mono tracking-wider tabular-nums leading-none">
+              {sessionCount}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {isWorking ? "Currently in session" : "Total today"}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Actions */}
+      {/* Actions — always allow clock-in when not currently working */}
       <div className="flex flex-wrap gap-3">
-        {!isWorking && !sessionDone && (
+        {!isWorking && (
           <Button size="lg" onClick={() => clockInMut.mutate()} disabled={clockInMut.isPending} className="gap-2 shadow-md hover:shadow-lg transition-all h-12 rounded-xl">
             <LogIn className="h-5 w-5" /> Clock In
           </Button>
@@ -226,12 +224,39 @@ export default function EmployeeDashboardPage() {
             <Play className="h-5 w-5" /> End Break
           </Button>
         )}
-        {sessionDone && (
-          <p className="text-sm text-muted-foreground self-center">
-            You've completed your session for today. See you tomorrow!
-          </p>
-        )}
       </div>
+
+      {/* Session History */}
+      {sessions.length > 0 && (
+        <Card className="card-premium overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-display font-semibold flex items-center gap-2">
+              <Clock className="h-4 w-4 text-info" /> Today's Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border/30">
+              {sessions.map((s: { id: string; start_time: string; end_time: string | null; total_active_seconds: number }, i: number) => (
+                <div key={s.id} className="flex items-center justify-between px-6 py-3 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-7 w-7 rounded-lg bg-info/8 flex items-center justify-center text-[10px] font-bold text-info">
+                      {i + 1}
+                    </div>
+                    <p className="text-sm font-medium tabular-nums font-mono">
+                      {new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {" → "}
+                      {s.end_time ? new Date(s.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "ongoing"}
+                    </p>
+                  </div>
+                  <Badge variant={s.end_time ? "secondary" : "outline"} className="text-[11px] font-mono tabular-nums">
+                    {s.end_time ? formatDuration(s.total_active_seconds) : "Active"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Break History */}
       {breaks.length > 0 && (
