@@ -89,18 +89,25 @@ serve(async (req) => {
   try {
     // GET /work-sessions/status
     if (action === "status" && req.method === "GET") {
-      const { data: session, error } = await supabase
+      // Fetch ALL sessions for today (multiple clock-in/out cycles)
+      const { data: sessions, error } = await supabase
         .from("work_sessions")
         .select("id, start_time, end_time, total_active_seconds, date")
         .eq("user_id", userId)
         .eq("date", todayDate())
-        .maybeSingle();
+        .order("start_time", { ascending: true });
       if (error) throw error;
+
+      const allSessions = sessions || [];
+      // Active session = the one with no end_time
+      const activeSession = allSessions.find((s) => !s.end_time) || null;
+      // For backward compat, "session" = active session or last completed
+      const currentSession = activeSession || allSessions[allSessions.length - 1] || null;
 
       // Get today's breaks
       const { data: breaks } = await supabase
         .from("breaks")
-        .select("id, break_start, break_end, duration_seconds")
+        .select("id, break_start, break_end, duration_seconds, session_id")
         .eq("user_id", userId)
         .eq("date", todayDate())
         .order("break_start", { ascending: true });
@@ -108,17 +115,24 @@ serve(async (req) => {
       const activeBreak = (breaks || []).find((b: { break_end: string | null }) => !b.break_end) || null;
       const totalBreakSeconds = (breaks || []).reduce((sum: number, b: { duration_seconds: number; break_start: string; break_end: string | null }) => {
         if (b.break_end) return sum + b.duration_seconds;
-        // Active break - calculate live duration
         return sum + Math.floor((Date.now() - new Date(b.break_start).getTime()) / 1000);
       }, 0);
 
+      // Total active seconds across ALL completed sessions
+      const totalCompletedSeconds = allSessions
+        .filter((s) => s.end_time)
+        .reduce((sum, s) => sum + s.total_active_seconds, 0);
+
       return json({
-        session: session || null,
-        is_working: session ? !session.end_time : false,
+        session: currentSession,
+        sessions: allSessions,
+        is_working: !!activeSession,
         on_break: !!activeBreak,
         active_break: activeBreak,
         breaks: breaks || [],
         total_break_seconds: totalBreakSeconds,
+        total_completed_seconds: totalCompletedSeconds,
+        session_count: allSessions.length,
       });
     }
 
