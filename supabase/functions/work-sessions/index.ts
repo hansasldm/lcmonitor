@@ -124,27 +124,60 @@ serve(async (req) => {
 
     // POST /work-sessions/clock-in
     if (action === "clock-in" && req.method === "POST") {
+      const now = new Date();
       const today = todayDate();
-      const { data: existing } = await supabase
+
+      // Close ALL existing open sessions for this user (enforce single active session)
+      const { data: openSessions } = await supabase
         .from("work_sessions")
-        .select("id, end_time")
+        .select("id, start_time")
         .eq("user_id", userId)
-        .eq("date", today)
-        .maybeSingle();
+        .is("end_time", null);
 
-      if (existing && !existing.end_time) return json({ error: "Already clocked in" }, 409);
-      if (existing && existing.end_time) return json({ error: "Already completed a session today" }, 409);
+      if (openSessions && openSessions.length > 0) {
+        for (const os of openSessions) {
+          // Close any active breaks on this session
+          const { data: activeBreaks } = await supabase
+            .from("breaks")
+            .select("id, break_start")
+            .eq("session_id", os.id)
+            .eq("user_id", userId)
+            .is("break_end", null);
 
-      const now = new Date().toISOString();
+          if (activeBreaks && activeBreaks.length > 0) {
+            for (const ab of activeBreaks) {
+              const brkDur = Math.floor((now.getTime() - new Date(ab.break_start).getTime()) / 1000);
+              await supabase
+                .from("breaks")
+                .update({ break_end: now.toISOString(), duration_seconds: Math.max(0, brkDur) })
+                .eq("id", ab.id);
+            }
+          }
+
+          // Calculate total break time for the session
+          const { data: allBreaks } = await supabase
+            .from("breaks")
+            .select("duration_seconds")
+            .eq("session_id", os.id);
+          const totalBreakSec = (allBreaks || []).reduce((s: number, b: { duration_seconds: number }) => s + b.duration_seconds, 0);
+
+          const totalSec = Math.floor((now.getTime() - new Date(os.start_time).getTime()) / 1000);
+          const activeSec = Math.max(0, totalSec - totalBreakSec);
+
+          await supabase
+            .from("work_sessions")
+            .update({ end_time: now.toISOString(), total_active_seconds: activeSec })
+            .eq("id", os.id);
+        }
+      }
+
+      // Create new session
       const { data: session, error } = await supabase
         .from("work_sessions")
-        .insert({ user_id: userId, date: today, start_time: now, source: "MANUAL" })
+        .insert({ user_id: userId, date: today, start_time: now.toISOString(), source: "MANUAL" })
         .select("id, start_time, end_time, total_active_seconds, date")
         .single();
-      if (error) {
-        if (error.code === "23505") return json({ error: "Session already exists for today" }, 409);
-        throw error;
-      }
+      if (error) throw error;
       return json({ session, is_working: true }, 201);
     }
 
