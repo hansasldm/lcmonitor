@@ -511,6 +511,7 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          job_title: string | null
           last_name: string
           password_hash: string
           role: Database["public"]["Enums"]["user_role"]
@@ -523,6 +524,7 @@ export type Database = {
           email: string
           first_name: string
           id?: string
+          job_title?: string | null
           last_name: string
           password_hash: string
           role?: Database["public"]["Enums"]["user_role"]
@@ -535,6 +537,7 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          job_title?: string | null
           last_name?: string
           password_hash?: string
           role?: Database["public"]["Enums"]["user_role"]
