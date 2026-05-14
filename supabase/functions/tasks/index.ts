@@ -64,6 +64,35 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.pathname.split("/").filter(Boolean).pop() || "";
 
+    async function logActivity(taskId: string, action: string, details: Record<string, unknown>) {
+      try {
+        await sb.from("task_activity").insert({ task_id: taskId, actor_id: userId, action, details });
+      } catch (_) { /* non-fatal */ }
+    }
+
+    // GET /activity?task_id=...
+    if (req.method === "GET" && path === "activity") {
+      const taskId = url.searchParams.get("task_id");
+      if (!taskId || !isUUID(taskId)) {
+        return new Response(JSON.stringify({ error: "Valid task_id required" }), { status: 400, headers: cors });
+      }
+      const { data: activity, error } = await sb
+        .from("task_activity")
+        .select("*, actor:users!task_activity_actor_id_fkey(id, first_name, last_name)")
+        .eq("task_id", taskId)
+        .order("created_at", { ascending: false });
+      if (error) {
+        // fallback without join if FK not present
+        const { data: act2 } = await sb.from("task_activity").select("*").eq("task_id", taskId).order("created_at", { ascending: false });
+        const actorIds = [...new Set((act2 || []).map((a) => a.actor_id))];
+        const { data: usersData } = await sb.from("users").select("id, first_name, last_name").in("id", actorIds.length ? actorIds : ["00000000-0000-0000-0000-000000000000"]);
+        const userMap = new Map((usersData || []).map((u) => [u.id, u]));
+        const enriched = (act2 || []).map((a) => ({ ...a, actor: userMap.get(a.actor_id) || null }));
+        return new Response(JSON.stringify({ activity: enriched }), { headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ activity }), { headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     // GET /tasks - list tasks
     if (req.method === "GET" && path === "tasks") {
       const status = url.searchParams.get("status");
@@ -132,6 +161,7 @@ serve(async (req) => {
       }).select("*, assignee:users!tasks_assignee_id_fkey(id, first_name, last_name, email), creator:users!tasks_created_by_fkey(id, first_name, last_name)").single();
 
       if (error) throw error;
+      await logActivity(task.id, "CREATED", { title: task.title, status: task.status, priority: task.priority, assignee_id: task.assignee_id });
       return new Response(JSON.stringify({ task }), { status: 201, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
@@ -165,6 +195,21 @@ serve(async (req) => {
         .select("*, assignee:users!tasks_assignee_id_fkey(id, first_name, last_name, email), creator:users!tasks_created_by_fkey(id, first_name, last_name)").single();
 
       if (error) throw error;
+
+      // Log granular activity for each meaningful change
+      const trackFields: Array<{ key: string; action: string }> = [
+        { key: "status", action: "STATUS_CHANGED" },
+        { key: "priority", action: "PRIORITY_CHANGED" },
+        { key: "assignee_id", action: "ASSIGNEE_CHANGED" },
+        { key: "title", action: "TITLE_CHANGED" },
+        { key: "description", action: "DESCRIPTION_CHANGED" },
+        { key: "due_date", action: "DUE_DATE_CHANGED" },
+      ];
+      for (const f of trackFields) {
+        if (updates[f.key] !== undefined && existing[f.key] !== updates[f.key]) {
+          await logActivity(id, f.action, { from: existing[f.key], to: updates[f.key] });
+        }
+      }
       return new Response(JSON.stringify({ task }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
 
@@ -183,6 +228,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: cors });
       }
 
+      // Log BEFORE delete since we lose the row after
+      await logActivity(id, "DELETED", { task_id: id });
       const { error } = await sb.from("tasks").delete().eq("id", id);
       if (error) throw error;
 

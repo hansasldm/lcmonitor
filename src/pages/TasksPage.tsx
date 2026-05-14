@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { tasksApi, Task } from "@/lib/tasks-api";
+import { tasksApi, Task, TaskActivity } from "@/lib/tasks-api";
 import { adminApi } from "@/lib/admin-api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +11,68 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, GripVertical, Calendar, User, Trash2, Edit3,
   Circle, ArrowRight, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp,
-  ClipboardList,
+  ClipboardList, History,
 } from "lucide-react";
+import { format } from "date-fns";
+
+const ACTION_LABEL: Record<string, string> = {
+  CREATED: "created the task",
+  STATUS_CHANGED: "changed status",
+  PRIORITY_CHANGED: "changed priority",
+  ASSIGNEE_CHANGED: "reassigned",
+  TITLE_CHANGED: "renamed",
+  DESCRIPTION_CHANGED: "edited description",
+  DUE_DATE_CHANGED: "changed due date",
+  DELETED: "deleted the task",
+};
+
+function HistoryDialog({ taskId, open, onOpenChange }: { taskId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["task-activity", taskId],
+    queryFn: () => tasksApi.activity(taskId),
+    enabled: open,
+  });
+  const activity: TaskActivity[] = data?.activity ?? [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><History className="h-4 w-4" /> Task history</DialogTitle></DialogHeader>
+        <ScrollArea className="max-h-[400px] pr-2">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
+          ) : activity.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">No activity yet.</p>
+          ) : (
+            <ol className="relative border-l border-border/50 ml-3 space-y-4">
+              {activity.map((a) => {
+                const d = a.details as { from?: unknown; to?: unknown } | null;
+                return (
+                  <li key={a.id} className="ml-4">
+                    <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <div className="text-sm text-foreground">
+                      <span className="font-medium">{a.actor ? `${a.actor.first_name} ${a.actor.last_name}` : "Someone"}</span>{" "}
+                      <span className="text-muted-foreground">{ACTION_LABEL[a.action] ?? a.action.toLowerCase()}</span>
+                      {d && d.from !== undefined && d.to !== undefined && (
+                        <span className="text-muted-foreground"> — <span className="line-through">{String(d.from ?? "—")}</span> → <span className="text-foreground">{String(d.to ?? "—")}</span></span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{format(new Date(a.created_at), "MMM d, yyyy · h:mm a")}</p>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const STATUS_COLUMNS = [
   { key: "TODO" as const, label: "To Do", icon: Circle, color: "text-muted-foreground", bg: "bg-muted/50" },
@@ -37,6 +93,7 @@ function TaskCard({
   task: Task; onUpdate: (data: Partial<Task> & { id: string }) => void; onDelete: (id: string) => void; canEdit: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.MEDIUM;
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== "DONE";
 
@@ -111,13 +168,19 @@ function TaskCard({
                   </Button>
                 </div>
               )}
-              <p className="text-[10px] text-muted-foreground">
-                Created by {task.creator ? `${task.creator.first_name} ${task.creator.last_name}` : "Unknown"} · {new Date(task.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] text-muted-foreground">
+                  Created by {task.creator ? `${task.creator.first_name} ${task.creator.last_name}` : "Unknown"} · {new Date(task.created_at).toLocaleDateString()}
+                </p>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => setHistoryOpen(true)}>
+                  <History className="h-3 w-3" /> History
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
+      <HistoryDialog taskId={task.id} open={historyOpen} onOpenChange={setHistoryOpen} />
     </div>
   );
 }

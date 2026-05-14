@@ -50,4 +50,16 @@ export const tasksApi = {
 
   delete: (id: string) =>
     request("tasks", { method: "DELETE", body: JSON.stringify({ id }) }),
+
+  activity: (taskId: string) => request(`activity?task_id=${encodeURIComponent(taskId)}`),
 };
+
+export interface TaskActivity {
+  id: string;
+  task_id: string;
+  actor_id: string;
+  action: string;
+  details: Record<string, unknown> | null;
+  created_at: string;
+  actor?: { id: string; first_name: string; last_name: string } | null;
+}
