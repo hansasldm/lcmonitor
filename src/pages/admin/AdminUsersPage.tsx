@@ -297,6 +297,7 @@ export default function AdminUsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Job Title</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
@@ -307,6 +308,7 @@ export default function AdminUsersPage() {
                 {users.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.first_name} {u.last_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{u.job_title || "—"}</TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{roleBadge(u.role)}</TableCell>
                     <TableCell>{statusBadge(u.status)}</TableCell>
