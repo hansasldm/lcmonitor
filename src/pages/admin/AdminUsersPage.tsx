@@ -138,6 +138,7 @@ export default function AdminUsersPage() {
         role: form.role,
         status: form.status,
         team_id: form.team_id || null,
+        job_title: form.job_title.trim() || null,
       };
       if (form.password) body.password = form.password;
       updateMut.mutate(body as Record<string, unknown> & { id: string });
@@ -150,7 +151,8 @@ export default function AdminUsersPage() {
         role: form.role,
         team_id: form.team_id || null,
         status: form.status,
-      });
+        job_title: form.job_title.trim() || null,
+      } as Parameters<typeof createMut.mutate>[0]);
     }
   };
 
