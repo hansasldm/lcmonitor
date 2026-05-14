@@ -142,7 +142,7 @@ serve(async (req) => {
       if (req.method === "GET" && !resourceId) {
         const { data, error } = await supabase
           .from("users")
-          .select("id, email, first_name, last_name, role, status, team_id, created_at")
+          .select("id, email, first_name, last_name, role, status, team_id, job_title, created_at")
           .order("created_at", { ascending: false });
         if (error) throw error;
         return json({ users: data });
