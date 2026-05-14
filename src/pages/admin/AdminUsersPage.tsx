@@ -39,6 +39,7 @@ interface User {
   role: string;
   status: string;
   team_id: string | null;
+  job_title: string | null;
   created_at: string;
 }
 
@@ -55,6 +56,7 @@ const emptyForm = {
   role: "EMPLOYEE",
   team_id: "",
   status: "ACTIVE",
+  job_title: "",
 };
 
 export default function AdminUsersPage() {
