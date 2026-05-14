@@ -142,7 +142,7 @@ serve(async (req) => {
       if (req.method === "GET" && !resourceId) {
         const { data, error } = await supabase
           .from("users")
-          .select("id, email, first_name, last_name, role, status, team_id, created_at")
+          .select("id, email, first_name, last_name, role, status, team_id, job_title, created_at")
           .order("created_at", { ascending: false });
         if (error) throw error;
         return json({ users: data });
@@ -157,6 +157,9 @@ serve(async (req) => {
         const role = body.role ? validateRole(body.role) : "EMPLOYEE";
         const status = body.status ? validateStatus(body.status) : "ACTIVE";
         const team_id = body.team_id && isUUID(body.team_id) ? body.team_id : null;
+        const job_title = typeof body.job_title === "string" && body.job_title.trim().length > 0
+          ? body.job_title.trim().slice(0, 100)
+          : null;
 
         if (!email || !password || !first_name || !last_name || !role || !status) {
           return json({ error: "Valid email, password (8-128 chars), first_name, last_name are required. Role must be EMPLOYEE/MANAGER/ADMIN." }, 400);
@@ -165,8 +168,8 @@ serve(async (req) => {
         const password_hash = await hashPasswordPBKDF2(password);
         const { data, error } = await supabase
           .from("users")
-          .insert({ email, password_hash, first_name, last_name, role, team_id, status })
-          .select("id, email, first_name, last_name, role, status, team_id, created_at")
+          .insert({ email, password_hash, first_name, last_name, role, team_id, status, job_title })
+          .select("id, email, first_name, last_name, role, status, team_id, job_title, created_at")
           .single();
         if (error) {
           if (error.code === "23505") return json({ error: "Email already exists" }, 409);
@@ -208,6 +211,11 @@ serve(async (req) => {
         if (body.team_id !== undefined) {
           updates.team_id = body.team_id && isUUID(body.team_id) ? body.team_id : null;
         }
+        if (body.job_title !== undefined) {
+          updates.job_title = typeof body.job_title === "string" && body.job_title.trim().length > 0
+            ? body.job_title.trim().slice(0, 100)
+            : null;
+        }
         if (body.password) {
           const v = validatePassword(body.password);
           if (!v) return json({ error: "Password must be 8-128 chars" }, 400);
@@ -220,7 +228,7 @@ serve(async (req) => {
           .from("users")
           .update(updates)
           .eq("id", resourceId)
-          .select("id, email, first_name, last_name, role, status, team_id, created_at")
+          .select("id, email, first_name, last_name, role, status, team_id, job_title, created_at")
           .single();
         if (error) throw error;
         return json({ user: data });

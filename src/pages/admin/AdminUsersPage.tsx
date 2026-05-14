@@ -39,6 +39,7 @@ interface User {
   role: string;
   status: string;
   team_id: string | null;
+  job_title: string | null;
   created_at: string;
 }
 
@@ -55,6 +56,7 @@ const emptyForm = {
   role: "EMPLOYEE",
   team_id: "",
   status: "ACTIVE",
+  job_title: "",
 };
 
 export default function AdminUsersPage() {
@@ -121,6 +123,7 @@ export default function AdminUsersPage() {
       role: u.role,
       team_id: u.team_id ?? "",
       status: u.status,
+      job_title: u.job_title ?? "",
     });
     setOpen(true);
   };
@@ -135,6 +138,7 @@ export default function AdminUsersPage() {
         role: form.role,
         status: form.status,
         team_id: form.team_id || null,
+        job_title: form.job_title.trim() || null,
       };
       if (form.password) body.password = form.password;
       updateMut.mutate(body as Record<string, unknown> & { id: string });
@@ -147,7 +151,8 @@ export default function AdminUsersPage() {
         role: form.role,
         team_id: form.team_id || null,
         status: form.status,
-      });
+        job_title: form.job_title.trim() || null,
+      } as Parameters<typeof createMut.mutate>[0]);
     }
   };
 
@@ -262,6 +267,15 @@ export default function AdminUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Job Title <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                  <Input
+                    value={form.job_title}
+                    onChange={(e) => setForm({ ...form, job_title: e.target.value })}
+                    placeholder="e.g. CEO, CTO, HR Manager, Designer"
+                    maxLength={100}
+                  />
+                </div>
                 <Button onClick={handleSubmit} disabled={createMut.isPending || updateMut.isPending} className="w-full">
                   {editUser ? "Save Changes" : "Create User"}
                 </Button>
@@ -283,6 +297,7 @@ export default function AdminUsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Job Title</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
@@ -293,6 +308,7 @@ export default function AdminUsersPage() {
                 {users.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.first_name} {u.last_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{u.job_title || "—"}</TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>{roleBadge(u.role)}</TableCell>
                     <TableCell>{statusBadge(u.status)}</TableCell>
