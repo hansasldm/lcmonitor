@@ -406,6 +406,33 @@ export type Database = {
         }
         Relationships: []
       }
+      task_activity: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          task_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assignee_id: string
