@@ -123,6 +123,7 @@ export default function AdminUsersPage() {
       role: u.role,
       team_id: u.team_id ?? "",
       status: u.status,
+      job_title: u.job_title ?? "",
     });
     setOpen(true);
   };
