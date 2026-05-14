@@ -319,19 +319,39 @@ export default function ChatsPage() {
                 <div className="text-center text-muted-foreground py-12">No messages yet. Start the conversation!</div>
               ) : (
                 <div className="space-y-3">
-                  {messages.map((msg) => {
+                  {messages.map((msg, idx) => {
                     const isMe = msg.sender_id === user?.id;
+                    const msgDate = new Date(msg.created_at);
+                    const prevDate = idx > 0 ? new Date(messages[idx - 1].created_at) : null;
+                    const showDateSep = !prevDate || prevDate.toDateString() !== msgDate.toDateString();
+                    const today = new Date();
+                    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+                    const dateLabel =
+                      msgDate.toDateString() === today.toDateString() ? "Today"
+                      : msgDate.toDateString() === yesterday.toDateString() ? "Yesterday"
+                      : format(msgDate, "EEEE, MMMM d, yyyy");
                     return (
-                      <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] px-4 py-2.5 ${isMe ? "chat-bubble-self" : "chat-bubble-other"}`}>
-                          {!isMe && (
-                            <div className="text-xs font-medium mb-1 opacity-70">
-                              {msg.sender ? `${msg.sender.first_name} ${msg.sender.last_name}` : "Unknown"}
+                      <div key={msg.id}>
+                        {showDateSep && (
+                          <div className="flex items-center gap-3 my-4">
+                            <div className="flex-1 h-px bg-border/50" />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-muted/50">
+                              {dateLabel}
+                            </span>
+                            <div className="flex-1 h-px bg-border/50" />
+                          </div>
+                        )}
+                        <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[75%] px-4 py-2.5 ${isMe ? "chat-bubble-self" : "chat-bubble-other"}`}>
+                            {!isMe && (
+                              <div className="text-xs font-medium mb-1 opacity-70">
+                                {msg.sender ? `${msg.sender.first_name} ${msg.sender.last_name}` : "Unknown"}
+                              </div>
+                            )}
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message_text}</p>
+                            <div className={`text-[10px] mt-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                              {format(msgDate, "h:mm a")}
                             </div>
-                          )}
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message_text}</p>
-                          <div className={`text-[10px] mt-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                            {format(new Date(msg.created_at), "h:mm a")}
                           </div>
                         </div>
                       </div>
