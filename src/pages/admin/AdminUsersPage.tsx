@@ -267,6 +267,15 @@ export default function AdminUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Job Title <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                  <Input
+                    value={form.job_title}
+                    onChange={(e) => setForm({ ...form, job_title: e.target.value })}
+                    placeholder="e.g. CEO, CTO, HR Manager, Designer"
+                    maxLength={100}
+                  />
+                </div>
                 <Button onClick={handleSubmit} disabled={createMut.isPending || updateMut.isPending} className="w-full">
                   {editUser ? "Save Changes" : "Create User"}
                 </Button>
