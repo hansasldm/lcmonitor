@@ -588,6 +588,7 @@ export type Database = {
           date: string
           end_time: string | null
           id: string
+          notes: string | null
           source: Database["public"]["Enums"]["session_source"]
           start_time: string
           total_active_seconds: number
@@ -600,6 +601,7 @@ export type Database = {
           date: string
           end_time?: string | null
           id?: string
+          notes?: string | null
           source?: Database["public"]["Enums"]["session_source"]
           start_time: string
           total_active_seconds?: number
@@ -612,6 +614,7 @@ export type Database = {
           date?: string
           end_time?: string | null
           id?: string
+          notes?: string | null
           source?: Database["public"]["Enums"]["session_source"]
           start_time?: string
           total_active_seconds?: number
