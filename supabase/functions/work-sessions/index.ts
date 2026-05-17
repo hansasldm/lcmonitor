@@ -92,7 +92,7 @@ serve(async (req) => {
       // Fetch ALL sessions for today (multiple clock-in/out cycles)
       const { data: sessions, error } = await supabase
         .from("work_sessions")
-        .select("id, start_time, end_time, total_active_seconds, date")
+        .select("id, start_time, end_time, total_active_seconds, date, notes")
         .eq("user_id", userId)
         .eq("date", todayDate())
         .order("start_time", { ascending: true });
@@ -458,6 +458,48 @@ serve(async (req) => {
       });
 
       return json({ members: enrichedMembers, team_id: teamId, period });
+    }
+
+    // GET /work-sessions/history?days=14 — list past sessions with notes
+    if (action === "history" && req.method === "GET") {
+      const daysParam = parseInt(url.searchParams.get("days") || "14", 10);
+      const days = Math.min(Math.max(isNaN(daysParam) ? 14 : daysParam, 1), 90);
+      const from = new Date();
+      from.setDate(from.getDate() - days);
+      const fromDate = from.toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("work_sessions")
+        .select("id, date, start_time, end_time, total_active_seconds, notes")
+        .eq("user_id", userId)
+        .gte("date", fromDate)
+        .order("start_time", { ascending: false });
+      if (error) throw error;
+      return json({ sessions: data || [] });
+    }
+
+    // PATCH /work-sessions/notes — update notes for one of your sessions
+    if (action === "notes" && (req.method === "PATCH" || req.method === "POST")) {
+      const body = await req.json().catch(() => ({}));
+      const sessionId = body?.session_id;
+      const notes = body?.notes;
+      if (!isUUID(sessionId)) return json({ error: "Invalid session_id" }, 400);
+      if (notes !== null && (typeof notes !== "string" || notes.length > 2000)) {
+        return json({ error: "Notes must be a string up to 2000 chars" }, 400);
+      }
+      const { data: existing } = await supabase
+        .from("work_sessions")
+        .select("id, user_id")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (!existing || existing.user_id !== userId) return json({ error: "Not found" }, 404);
+      const { data, error } = await supabase
+        .from("work_sessions")
+        .update({ notes: notes?.trim() || null })
+        .eq("id", sessionId)
+        .select("id, notes")
+        .single();
+      if (error) throw error;
+      return json({ session: data });
     }
 
     return json({ error: "Not found" }, 404);

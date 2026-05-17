@@ -25,4 +25,7 @@ export const workSessionsApi = {
   getActiveNow: () => request("active-now"),
   getTeamOverview: (period: "today" | "week" = "today") =>
     request(`team-overview?period=${period}`),
+  getHistory: (days = 14) => request(`history?days=${days}`),
+  updateNotes: (session_id: string, notes: string) =>
+    request("notes", { method: "PATCH", body: JSON.stringify({ session_id, notes }) }),
 };
