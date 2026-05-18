@@ -12,6 +12,7 @@ export interface AuthUser {
   last_name: string;
   role: "EMPLOYEE" | "MANAGER" | "ADMIN";
   team_id: string | null;
+  monitor_token?: string | null;
 }
 
 interface AuthResponse {
