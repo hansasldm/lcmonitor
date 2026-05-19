@@ -1,6 +1,10 @@
 import { getAuthHeaders } from "@/lib/auth";
 
-const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+// In production, route through local PHP proxy to bypass Edge Function CORS
+const IS_PROD = import.meta.env.PROD;
+const BASE = IS_PROD
+  ? `/supabase-proxy.php?path=chat`
+  : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 async function request(path: string, options?: RequestInit) {
   const res = await fetch(`${BASE}/${path}`, {

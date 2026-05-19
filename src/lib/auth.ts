@@ -1,6 +1,11 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1/auth`;
+
+// In production, route through local PHP proxy to bypass Edge Function CORS
+const IS_PROD = import.meta.env.PROD;
+const FUNCTIONS_URL = IS_PROD
+  ? `/supabase-proxy.php?path=auth`
+  : `${SUPABASE_URL}/functions/v1/auth`;
 
 // Storage key for auth session
 const SB_AUTH_KEY = `sb-${SUPABASE_PROJECT_ID}-auth-token`;
