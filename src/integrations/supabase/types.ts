@@ -540,6 +540,7 @@ export type Database = {
           id: string
           job_title: string | null
           last_name: string
+          monitor_token: string
           password_hash: string
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["user_status"]
@@ -553,6 +554,7 @@ export type Database = {
           id?: string
           job_title?: string | null
           last_name: string
+          monitor_token?: string
           password_hash: string
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
@@ -566,6 +568,7 @@ export type Database = {
           id?: string
           job_title?: string | null
           last_name?: string
+          monitor_token?: string
           password_hash?: string
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]

@@ -170,7 +170,7 @@ serve(async (req) => {
 
       const { data: user, error } = await supabase
         .from("users")
-        .select("id, email, password_hash, first_name, last_name, role, team_id, status")
+        .select("id, email, password_hash, first_name, last_name, role, team_id, status, monitor_token")
         .eq("email", email)
         .maybeSingle();
 
@@ -212,6 +212,7 @@ serve(async (req) => {
           last_name: user.last_name,
           role: user.role,
           team_id: user.team_id,
+          monitor_token: user.monitor_token,
         },
       });
     }
