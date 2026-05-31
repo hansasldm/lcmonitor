@@ -31,7 +31,7 @@ if (empty($path)) {
     exit;
 }
 
-$supabaseUrl = "https://aemljalkqrcucaxqpnpv.supabase.co/functions/v1/" . $path;
+$supabaseUrl = "https://cuawkttwzfpjtqwjaybu.supabase.co/functions/v1/" . $path;
 
 // Get all incoming headers
 $headers = [];
