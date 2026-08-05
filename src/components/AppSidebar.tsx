@@ -38,6 +38,7 @@ const navItems = [
   { title: "Chats", url: "/chats", icon: MessageSquare, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Tasks", url: "/tasks", icon: ClipboardList, roles: ["EMPLOYEE", "MANAGER", "ADMIN"] },
   { title: "Team", url: "/team", icon: Users, roles: ["MANAGER", "ADMIN"] },
+  { title: "Browser History", url: "/browser-history", icon: Globe, roles: ["MANAGER", "ADMIN"] },
 ];
 
 const adminItems = [

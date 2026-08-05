@@ -4,10 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // ── CORS (restricted origins) ──
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("origin") || "";
-  const allowed =
-    origin.endsWith(".lovable.app") || origin.endsWith(".lovableproject.com") || origin.startsWith("http://localhost");
   return {
-    "Access-Control-Allow-Origin": allowed ? origin : "",
+    "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   };
@@ -172,7 +170,7 @@ serve(async (req) => {
 
       const { data: user, error } = await supabase
         .from("users")
-        .select("id, email, password_hash, first_name, last_name, role, team_id, status")
+        .select("id, email, password_hash, first_name, last_name, role, team_id, status, monitor_token")
         .eq("email", email)
         .maybeSingle();
 
@@ -214,6 +212,7 @@ serve(async (req) => {
           last_name: user.last_name,
           role: user.role,
           team_id: user.team_id,
+          monitor_token: user.monitor_token,
         },
       });
     }

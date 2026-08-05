@@ -9,6 +9,7 @@ import {
   getStoredUser,
   isAuthenticated as checkAuth,
 } from "@/lib/auth";
+import { activateMonitorExtension } from "@/lib/extension-activate";
 
 
 interface AuthContextType {
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const res = await authLogin(email, password);
     setUser(res.user);
+    activateMonitorExtension(res.user.id, res.user.monitor_token);
   }, []);
 
   const signup = useCallback(

@@ -2,8 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
   return {
-    "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
+    "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   };
@@ -497,6 +498,120 @@ serve(async (req) => {
         .single();
       if (error) throw error;
       return json({ session: data });
+    }
+
+    // POST /work-sessions/browser-history — insert browser history records
+    if (action === "browser-history" && req.method === "POST") {
+      const body = await req.json().catch(() => null);
+      if (!body) {
+        return json({ error: "Missing body" }, 400);
+      }
+
+      // Payload can be a single object or an array of history entries
+      const entries = Array.isArray(body) ? body : [body];
+      if (entries.length === 0) {
+        return json({ error: "Empty history payload" }, 400);
+      }
+
+      // Resolve domain utility function
+      const getDomain = (urlStr: string) => {
+        try {
+          const u = new URL(urlStr);
+          return u.hostname.replace("www.", "");
+        } catch {
+          return urlStr;
+        }
+      };
+
+      // Fetch active session if not provided
+      let activeSessionId: string | null = null;
+      const firstEntryWithoutSession = entries.some(e => !e.session_id || !isUUID(e.session_id));
+      
+      if (firstEntryWithoutSession) {
+        const { data: activeSession } = await supabase
+          .from("work_sessions")
+          .select("id")
+          .eq("user_id", userId)
+          .is("end_time", null)
+          .order("start_time", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (activeSession) {
+          activeSessionId = activeSession.id;
+        }
+      }
+
+      // Format entries to insert
+      const formattedEntries = entries.map((entry) => {
+        const urlStr = typeof entry.url === "string" ? entry.url : "";
+        const sId = typeof entry.session_id === "string" && isUUID(entry.session_id)
+          ? entry.session_id
+          : activeSessionId;
+        return {
+          user_id: userId,
+          url: urlStr,
+          domain: getDomain(urlStr),
+          title: typeof entry.title === "string" ? entry.title : null,
+          duration_seconds: typeof entry.duration_seconds === "number" ? entry.duration_seconds : 0,
+          visited_at: typeof entry.visited_at === "string" ? entry.visited_at : new Date().toISOString(),
+          session_id: sId,
+        };
+      });
+
+      const { data, error } = await supabase
+        .from("browser_history")
+        .insert(formattedEntries)
+        .select();
+
+      if (error) throw error;
+      return json({ success: true, count: data?.length || 0 }, 201);
+    }
+
+    // GET /work-sessions/browser-history — retrieve browser history records
+    if (action === "browser-history" && req.method === "GET") {
+      if (userRole !== "MANAGER" && userRole !== "ADMIN") {
+        return json({ error: "Forbidden" }, 403);
+      }
+
+      const targetUserId = url.searchParams.get("user_id");
+      const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
+
+      if (!targetUserId || !isUUID(targetUserId)) {
+        return json({ error: "Missing or invalid user_id" }, 400);
+      }
+
+      // If user is MANAGER, verify target user belongs to their team
+      if (userRole === "MANAGER") {
+        if (!userTeamId) {
+          return json({ error: "Manager has no assigned team" }, 403);
+        }
+        const { data: targetUser } = await supabase
+          .from("users")
+          .select("team_id")
+          .eq("id", targetUserId)
+          .maybeSingle();
+
+        if (!targetUser || targetUser.team_id !== userTeamId) {
+          return json({ error: "Forbidden: User is not on your team" }, 403);
+        }
+      }
+
+      let query = supabase
+        .from("browser_history")
+        .select("id, url, domain, title, duration_seconds, visited_at, session_id")
+        .eq("user_id", targetUserId)
+        .order("visited_at", { ascending: false });
+
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        query = query
+          .gte("visited_at", `${dateParam}T00:00:00Z`)
+          .lt("visited_at", `${dateParam}T23:59:59.999Z`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return json({ history: data || [] });
     }
 
     return json({ error: "Not found" }, 404);
