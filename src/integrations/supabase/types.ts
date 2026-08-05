@@ -112,6 +112,44 @@ export type Database = {
           },
         ]
       }
+      browser_history: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          timestamp: string
+          title: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          timestamp?: string
+          title?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          timestamp?: string
+          title?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "browser_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       breaks: {
         Row: {
           break_end: string | null

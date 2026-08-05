@@ -19,6 +19,8 @@ import ChatsPage from "@/pages/ChatsPage";
 import TasksPage from "@/pages/TasksPage";
 import NotFound from "@/pages/NotFound";
 
+import BrowserHistoryPage from "@/pages/admin/BrowserHistoryPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -46,6 +48,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
             <Route path="/admin/users" element={<ProtectedPage><AdminUsersPage /></ProtectedPage>} />
             <Route path="/admin/teams" element={<ProtectedPage><AdminTeamsPage /></ProtectedPage>} />
+            <Route path="/admin/browser-history" element={<ProtectedPage><BrowserHistoryPage /></ProtectedPage>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

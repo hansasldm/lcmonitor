@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "LC Monitor Extension",
+  "version": "1.0",
+  "description": "Employee monitoring extension for LC Monitor.",
+  "permissions": [
+    "alarms",
+    "storage",
+    "history",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LC Monitor Settings"
+  }
+}

@@ -11,6 +11,7 @@ import {
   MessageSquare,
   ChevronRight,
   ClipboardList,
+  Globe,
 } from "lucide-react";
 import companyLogo from "@/assets/lemoncode-logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -43,6 +44,7 @@ const adminItems = [
   { title: "Overview", url: "/admin", icon: Settings },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Teams", url: "/admin/teams", icon: UsersRound },
+  { title: "History", url: "/admin/browser-history", icon: Globe },
 ];
 
 export function AppSidebar() {
